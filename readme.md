@@ -27,11 +27,17 @@
 
 - Para arrancar en modo desarrollo
 
+```
 docker compose -f docker-compose.dev.yml up
+```
 
 - Si lo quiero arrancar en modo produccion es solo
 
+```
 docker compose up -d
+```
+
+**Se sube una copia de la base de datos para importar con pg-admin con las capas y datos del proyecto en el momento actual**
 
 # Acceso administrador
 
@@ -45,21 +51,24 @@ password: webgis#2026
 
 Para subirlo a internet en vez de subir todos los archivos y meterlo en un Docker podemos crear una imagen y subir solo la imagen y despues borramos esa imagen del servidor, lo primero es hacer un build
 
-docker compose build frontend
-
+```
+doker compose build frontend
 docker compose build backend
+```
 
 Y despues salvar las imagenes
 
+```
 docker save -o backend.tar plateaweb-backend
-
 docker save -o frontend.tar plateaweb-frontend
+```
 
 A continuación subimos los archivos y cargamos las imagenes
 
+```
 docker load -i backend.tar
-
 docker load -i frontend.tar
+```
 
 Las capas las subimos a mano a traves de pgadmin
 
@@ -93,8 +102,15 @@ ionic build && npx cap sync android
     ↓
 npx cap open android
     ↓
-Android Studio → bundleRelease / assembleRelease
+Android Studio → Generate Signed App Bundle or APK (se guarda en android/app/release/)
 ```
 
-- Con los nuevos cambios introducidos ya no es necesario exportar el paquete, cuando se arranca la app
-  hay un boton para actualizar las capas.
+**Con los nuevos cambios introducidos ya no es necesario exportar el paquete, cuando se arranca la app hay un boton para actualizar las capas con lo que solo hay que ejecutar.**
+
+```
+ionic build && npx cap sync android
+  ↓
+npx cap open android
+  ↓
+Android Studio → Build → Generate Signed App Bundle or APK (se guarda en android/app/release/)
+```
