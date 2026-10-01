@@ -36,38 +36,51 @@ docker compose up -d
 # Acceso administrador
 
 localhost:3000/admin
+
 user: admin
+
 password: webgis#2026
 
 # Subir a internet
 
-primero se hace un build
+Para subirlo a internet en vez de subir todos los archivos y meterlo en un Docker podemos crear una imagen y subir solo la imagen y despues borramos esa imagen del servidor, lo primero es hacer un build
+
 docker compose build frontend
+
 docker compose build backend
 
+Y despues salvar las imagenes
+
 docker save -o backend.tar plateaweb-backend
+
 docker save -o frontend.tar plateaweb-frontend
 
-despues en internet subimos los archivos y cargamos las imagenes
+A continuación subimos los archivos y cargamos las imagenes
+
 docker load -i backend.tar
+
 docker load -i frontend.tar
 
-las capas las subimos a mano a traves de pgadmin
+Las capas las subimos a mano a traves de pgadmin
 
-Cuando ya he usado docker compose up -d --build se crea el volumen geojson_uploads con lo que el resto de
-veces no copia lo que hay en la carpeta uploads/capas al contenedor, hay que borrar el volumen para
+**En la nueva version no usamos geojson**
+
+Cuando ya he usado docker compose up -d --build se crea el volumen geojson_uploads con lo que el resto de veces no copia lo que hay en la carpeta uploads/capas al contenedor, hay que borrar el volumen para
 que lo copie
 
 docker compose down
+
 docker volume rm plateaweb_geojson_uploads # comprueba el nombre exacto con: docker volume ls
+
 docker compose up -d --build
 
-en el docker de internet hay que hacer lo mismo pero
+En el docker de internet hay que hacer lo mismo pero
+
 docker volume rm platea_geojson_uploads
 
 # Generar app para android
 
-para generar automaticamente cada x tiempo la aplicacion android
+Para generar automaticamente cada x tiempo la aplicacion android
 
 ```
 Admin panel → "Generar y descargar paquete" → plateagis-android-FECHA.zip
