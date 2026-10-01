@@ -1,0 +1,327 @@
+<ion-header [translucent]="true">
+  <ion-toolbar class="cabecera">
+    <ion-title>
+      <img src="./assets/img/logo_platea.png" width="150" height="50" style="margin:auto;display:block;">
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+
+  <div id="map" style="height: 100%;"></div>
+  <ion-button
+    (click)="mostrarListaTerrenos = !mostrarListaTerrenos; mostrarListaCapasOnline=false; mostrarListaCapas=false; mostrarListaCapasOffline=false"
+    size="default" class="btn-blanco" id="terreno">
+    <ion-icon name="globe"></ion-icon>
+  </ion-button>
+
+  @if (mostrarListaTerrenos) {
+  <ion-list id="lista-terrenos">
+    <ion-radio-group [value]="mapa.estiloSeleccionado" (ionChange)="changeStyleMap($event)">
+      <ion-item><ion-radio value="google">Google</ion-radio></ion-item>
+      <ion-item><ion-radio value="hybrid">Satelite</ion-radio></ion-item>
+      <ion-item><ion-radio value="streets">3D</ion-radio></ion-item>
+      <ion-item><ion-radio value="bright">Claro</ion-radio></ion-item>
+      <ion-item><ion-radio value="openstreetmap">OSM</ion-radio></ion-item>
+      <ion-item><ion-radio value="landscape">Landscape</ion-radio></ion-item>
+      <ion-item><ion-radio value="outdoor">Exterior</ion-radio></ion-item>
+      <ion-item><ion-radio value="offline">Offline</ion-radio></ion-item>
+    </ion-radio-group>
+  </ion-list>
+  }
+  <div class="capas">
+    <ion-button
+      (click)="mostrarListaCapas = !mostrarListaCapas; mostrarListaCapasOffline=false; mostrarListaCapasOnline=false; mostrarListaTerrenos = false"
+      size="default" class="btn-blanco" id="capas-diputacion">
+      <ion-icon name="albums"></ion-icon>
+    </ion-button>
+  </div>
+
+
+  @if (mostrarListaCapas) {
+  <ion-list id="lista-capas" class="lista-diputacion">
+    @for (grupo of capasDiputacion.grupoDiputacion; track grupo.nombre) {
+    @if(grupo.nombre != 'principal'){
+    <ion-list-header (click)="capasDiputacion.toggleGrupoDiputacion(grupo)" style="cursor: pointer;">
+      <ion-label>{{grupo.nombre}}</ion-label>
+      <ion-icon [name]="capasDiputacion.gruposAbiertos[grupo.id] ? 'chevron-up-outline' : 'chevron-down-outline'">
+      </ion-icon>
+    </ion-list-header>
+    }
+    @if (capasDiputacion.gruposAbiertos[grupo.id]) {
+    @for (capa of capasDiputacion.capas; track capa.texto) {
+    @if(capa.id_grupo === grupo.id){
+    <ion-item>
+      <ion-checkbox [checked]="capa.checked" (ionChange)="onCapasChange(capa, 'diputacion', $event)"></ion-checkbox>
+      <img [src]="capa.imagen" [alt]="capa.nombre_source" width="24" height="24" class="ion-margin">
+      <ion-label>{{capa.texto}}</ion-label>
+    </ion-item>
+    }
+    }
+    }
+    }
+    <div style="text-align: center;">
+      <ion-button size="small" color="danger" (click)="mostrarListaCapas = false">
+        <ion-icon name="close"></ion-icon>Cerrar
+      </ion-button>
+    </div>
+  </ion-list>
+  }
+  <div class="capas">
+    <ion-button
+      (click)="mostrarListaCapasOffline = !mostrarListaCapasOffline; mostrarListaCapas=false; mostrarListaCapasOnline=false; mostrarListaTerrenos = false"
+      size="default" class="btn-blanco" id="capas-offline">
+      <ion-icon name="download"></ion-icon>
+    </ion-button>
+  </div>
+  @if (mostrarListaCapasOffline) {
+  <ion-list id="lista-capas" class="lista-offline">
+    @for (grupo of capasOffline.grupoOffline; track grupo.nombre) {
+    <ion-list-header (click)="capasOffline.toggleGrupoOffline(grupo)" style="cursor: pointer;">
+      <ion-label>{{grupo.nombre}}</ion-label>
+      <ion-icon [name]="capasOffline.gruposAbiertosOffline[grupo.id] ? 'chevron-up-outline' : 'chevron-down-outline'">
+      </ion-icon>
+    </ion-list-header>
+    @if (capasOffline.gruposAbiertosOffline[grupo.id]) {
+    @for (capa of capasOffline.capasOffline; track capa.id) {
+    @if(capa.id_grupo === grupo.id){
+    <ion-item>
+      <ion-checkbox [checked]="capa.checked" (ionChange)="onCapasChange(capa, 'offline', $event)"></ion-checkbox>
+      <img [src]="capa.imagen" [alt]="capa.nombre_source" width="24" height="24" class="ion-margin">
+      <ion-label>{{capa.texto}}</ion-label>
+    </ion-item>
+    }
+    }
+    }
+    }
+    <div style="text-align: center;">
+      <ion-button size="small" color="danger" (click)="mostrarListaCapasOffline = false">
+        <ion-icon name="close"></ion-icon>Cerrar
+      </ion-button>
+    </div>
+  </ion-list>
+  }
+  <div class="capas">
+    <ion-button
+      (click)="mostrarListaCapasOnline = !mostrarListaCapasOnline; mostrarListaCapas=false; mostrarListaCapasOffline=false; mostrarListaTerrenos = false"
+      size="default" class="btn-blanco" id="capas-online">
+      <ion-icon name="cloud-upload"></ion-icon>
+    </ion-button>
+  </div>
+  @if (mostrarListaCapasOnline) {
+  <ion-list id="lista-capas" class="lista-online">
+    @for (grupo of capasOnline.grupoOnline; track grupo.nombre) {
+
+    @if(grupo.nombre != 'principal'){
+    <ion-list-header (click)="capasOnline.toggleGrupoOnline(grupo)" style="cursor: pointer;">
+      <ion-label>{{grupo.nombre}}</ion-label>
+      <ion-icon [name]="capasOnline.gruposAbiertosOnline[grupo.id] ? 'chevron-up-outline' : 'chevron-down-outline'">
+      </ion-icon>
+    </ion-list-header>
+    }
+
+    @if (capasOnline.gruposAbiertosOnline[grupo.id]) {
+
+    @for (capa of capasOnline.capasOnline; track capa.texto) {
+    @if(capa.id_grupo === grupo.id){
+    <ion-item>
+      <ion-checkbox [checked]="capa.checked" (ionChange)="onCapasChange(capa, 'online', $event)"></ion-checkbox>
+      <img [src]="capa.imagen" [alt]="capa.nombre_source" width="24" height="24" class="ion-margin">
+      <ion-label>{{capa.texto}}</ion-label>
+    </ion-item>
+    }
+    }
+    }
+    }
+    <div style="text-align: center;">
+      <ion-button size="small" color="danger" (click)="mostrarListaCapasOnline = false">
+        <ion-icon name="close"></ion-icon>Cerrar
+      </ion-button>
+    </div>
+  </ion-list>
+  }
+
+  <div class="leyendas">
+    @if (capasDiputacion.getCapaPorSource('CentrosSalud')?.checked && mostrarLeyendas) {
+    <div class="leyenda-salud">
+      <img src="/assets/capas/icons/hospital.png" alt="Hospital" width="24" height="24" class="ion-margin">
+      <ion-label>Hospital</ion-label>
+      <img src="/assets/capas/icons/centro-guardia.png" alt="Centro de Guardia" width="24" height="24"
+        class="ion-margin">
+      <ion-label>Centro de Guardia</ion-label>
+      <img src="/assets/capas/icons/centro-polivalente.png" alt="Centro Polivalente" width="24" height="24"
+        class="ion-margin">
+      <ion-label>Centro Polivalente</ion-label>
+      <img src="/assets/capas/icons/centro-salud.png" alt="Centro de Salud" width="24" height="24" class="ion-margin">
+      <ion-label>Centro de Salud</ion-label>
+      <img src="/assets/capas/icons/puntos-atencion-continuada.png" alt="Puntos de Atencion Continuada" width="24"
+        height="24" class="ion-margin">
+      <ion-label>Puntos de Atencion Continuada</ion-label>
+    </div>
+    }
+    @if (capasDiputacion.getCapaPorSource('ParquesExtincionSalvamento')?.checked && mostrarLeyendas) {
+    <div class="leyenda-bomberos">
+      <img src="/assets/capas/icons/bomberos-tipo1.png" alt="Bomberos" width="24" height="24" class="ion-margin">
+      <ion-label>Bomberos tipo 1</ion-label>
+      <img src="/assets/capas/icons/bomberos-tipo2.png" alt="Bomberos" width="24" height="24" class="ion-margin">
+      <ion-label>Bomberos tipo 2</ion-label>
+      <img src="/assets/capas/icons/bomberos-tipo3a.png" alt="Bomberos" width="24" height="24" class="ion-margin">
+      <ion-label>Bomberos tipo 3a</ion-label>
+      <img src="/assets/capas/icons/bomberos-externo.png" alt="Bomberos" width="24" height="24" class="ion-margin">
+      <ion-label>Parque externo</ion-label>
+      <img src="/assets/capas/icons/agente-proteccion-civil.png" alt="Proteccion Civil" width="24" height="24"
+        class="ion-margin">
+      <ion-label>Agente de Proteccion Civil</ion-label>
+      <img src="/assets/capas/icons/agente-colaborador.png" alt="Colaborador" width="24" height="24" class="ion-margin">
+      <ion-label>Agente Colaborador</ion-label>
+    </div>
+    }
+    @if (capasDiputacion.getCapaPorSource('UrbanoHidraulica')?.checked && mostrarLeyendas) {
+    <div class="leyenda-hidraulica">
+      <img src="/assets/capas/icons/interfaz-hidraulica-leyenda.png" alt="Bomberos" width="24" height="24"
+        class="ion-margin">
+      <ion-label>Interfaz Urbano-Hidráulica</ion-label>
+      <img src="/assets/capas/icons/area-actuacion-hidraulica-leyenda.png" alt="Bomberos" width="24" height="24"
+        class="ion-margin">
+      <ion-label>Área de actuación hidráulica</ion-label>
+      <img src="/assets/capas/icons/area-urbano-hidraulica-leyenda.png" alt="Bomberos" width="24" height="24"
+        class="ion-margin">
+      <ion-label>Área urbana hidráulica</ion-label>
+      <img src="/assets/capas/icons/area-dominio-publico-hidraulica-leyenda.png" alt="Bomberos" width="24" height="24"
+        class="ion-margin">
+      <ion-label>Área dominio público hidráulica</ion-label>
+    </div>
+    }
+    @if (capasDiputacion.getCapaPorSource('UrbanoForestal')?.checked && mostrarLeyendas) {
+    <div class="leyenda-forestal">
+      <img src="/assets/capas/icons/interfaz-forestal-leyenda.png" alt="Bomberos" width="24" height="24"
+        class="ion-margin">
+      <ion-label>Interfaz Urbano-Forestal</ion-label>
+      <img src="/assets/capas/icons/forestal-forestal-leyenda.png" alt="Bomberos" width="24" height="24"
+        class="ion-margin">
+      <ion-label>Forestal</ion-label>
+      <img src="/assets/capas/icons/forestal-urbano-leyenda.png" alt="Bomberos" width="24" height="24"
+        class="ion-margin">
+      <ion-label>Urbano</ion-label>
+    </div>
+    }
+    @if (capasDiputacion.getCapaPorSource('RiesgoIncendioArbolado')?.checked && mostrarLeyendas) {
+    <div class="leyenda-riesgo-incendio-arbolado">
+      <img src="/assets/capas/icons/riesgo-muy-alto-leyenda.png" alt="Bomberos" width="24" height="24"
+        class="ion-margin">
+      <ion-label>Muy Alto</ion-label>
+      <img src="/assets/capas/icons/riesgo-alto-leyenda.png" alt="Bomberos" width="24" height="24" class="ion-margin">
+      <ion-label>Alto</ion-label>
+      <img src="/assets/capas/icons/riesgo-moderado-leyenda.png" alt="Bomberos" width="24" height="24"
+        class="ion-margin">
+      <ion-label>Moderado</ion-label>
+      <img src="/assets/capas/icons/zona-analisis-leyenda.png" alt="Bomberos" width="24" height="24" class="ion-margin">
+      <ion-label>Zona Análisis</ion-label>
+    </div>
+    }
+    @if (capasOffline.getCapaPorSource('BtnPoblacion')?.checked && mostrarLeyendas) {
+    <div class="leyenda-entidad-ine">
+      <img src="./assets/capas/offline/limites/icons/entidad-ine.png" alt="Entidad INE" width="24" height="24"
+        class="ion-margin">
+      <ion-label>Entidad INE</ion-label>
+      <img src="./assets/capas/offline/limites/icons/entidad-no-ine.png" alt="Entidad No INE" width="24" height="24"
+        class="ion-margin">
+      <ion-label>Entidad No INE</ion-label>
+    </div>
+    }
+    @if (capasOffline.getCapaPorSource('ZonaProtegida')?.checked && mostrarLeyendas) {
+    <div class="leyenda-zona-protegida">
+      <img src="./assets/capas/offline/limites/icons/btn-zona-protegida.png" alt="Zona Protegida" width="24" height="24"
+        class="ion-margin">
+      <ion-label>Zona Protegida</ion-label>
+    </div>
+    }
+  
+    @if (leyendasInforme && mostrarLeyendas) {
+    <div class="leyenda-informe">
+        <img src="/assets/capas/informe/hidrantes.png" alt="Bomberos" width="24" height="24"
+          class="ion-margin">
+        <ion-label>Hidrantes</ion-label>
+        <img src="/assets/capas/informe/inventario.png" alt="Bomberos" width="24" height="24"
+          class="ion-margin">
+        <ion-label>Inventario Medios</ion-label>
+        <img src="/assets/capas/informe/parques-extincion.png" alt="Bomberos" width="24" height="24"
+          class="ion-margin">
+        <ion-label>Parques Extinción</ion-label>
+        <img src="/assets/capas/informe/radio-hidrantes.png" alt="Bomberos" width="24" height="24"
+          class="ion-margin">
+        <ion-label>Radio Hidrantes</ion-label>
+        <img src="/assets/capas/informe/radio-medios.png" alt="Bomberos" width="24" height="24"
+          class="ion-margin">
+        <ion-label>Radio Medios</ion-label>
+    </div>
+    }
+  </div>
+
+  <div class="boton-leyendas">
+    <ion-button
+      (click)="mostrarOpcionLeyendas = !mostrarOpcionLeyendas; mostrarListaCapasOnline = false; mostrarListaCapas=false; mostrarListaCapasOffline=false; mostrarListaTerrenos = false"
+      size="default" class="btn-blanco" id="ajustes">
+      <ion-icon name="construct-outline"></ion-icon>
+    </ion-button>
+  </div>
+  @if (mostrarOpcionLeyendas) {
+  <ion-list id="lista-leyendas">
+    <ion-item>
+      <ion-checkbox name="mostrarLeyendas" [checked]="mostrarLeyendas"
+        (ionChange)="mostrarLeyendas= !mostrarLeyendas;mostrarOpcionLeyendas = !mostrarOpcionLeyendas">
+        <ion-label>Mostrar Leyendas</ion-label></ion-checkbox>
+    </ion-item>
+  </ion-list>
+  }
+  <div class="boton-emergencias">
+    <ion-button (click)="abrirModalEmergencia()" size="default" class="btn-blanco">
+      <ion-icon name="alert-circle-outline"></ion-icon>
+    </ion-button>
+  </div>
+  @if (mostrarLimpiarEmergencias) {
+  <div class="boton-limpiar-emergencias">
+    <ion-button (click)="limpiarCapasEmergencia()" size="default" class="btn-blanco">
+      <ion-icon name="close-circle-outline"></ion-icon>
+    </ion-button>
+  </div>
+  }
+  @if (esNativo) {
+  <div class="boton-actualizar">
+    <ion-button (click)="abrirActualizarCapas()" size="default" class="btn-blanco"
+      [class.pulso]="sinCapasDescargadas" id="actualizar-capas">
+      <ion-icon name="sync-outline"></ion-icon>
+    </ion-button>
+  </div>
+  @if (sinCapasDescargadas) {
+  <div class="aviso-vacio" (click)="abrirActualizarCapas()">
+    <ion-icon name="sync-outline"></ion-icon>
+    Aún no hay capas en este dispositivo.<br>Pulsa el botón de actualizar para descargarlas.
+  </div>
+  }
+  }
+  @if (modoSeleccionMapa) {
+    <div style="
+      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      background: rgba(0,0,0,0.75); color: white; padding: 12px 20px;
+      border-radius: 20px; z-index: 9999; font-size: 14px;">
+      <ion-icon name="map-outline"></ion-icon>
+      Pincha en el mapa para seleccionar la ubicación
+    </div>
+  }
+  <ion-modal [isOpen]="isModalOpen">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Informacion</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="setOpen(false)">Close</ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding" >
+        <p [innerHTML]="modalContent"></p>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+</ion-content>

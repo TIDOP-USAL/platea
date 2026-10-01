@@ -1,0 +1,28 @@
+.centrado {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 50vh;
+  text-align: center;
+
+  ion-progress-bar { width: 100%; }
+}
+
+.icono-grande { font-size: 56px; }
+
+.fase { margin: 0; color: var(--ion-color-medium); }
+
+.nota { display: block; margin: 12px 4px; }
+
+.acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  text-align: center;
+}
+
+ion-list-header ion-label { font-weight: 600; }

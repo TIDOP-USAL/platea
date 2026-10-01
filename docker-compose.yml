@@ -1,0 +1,90 @@
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: plateagis_db
+    
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: plateagis
+      POSTGRES_USER: plateagis
+      POSTGRES_PASSWORD: plateagis_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U plateagis"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal
+
+  backend:
+    build: ./backend
+    #image: plateaweb-backend SE SUSTITUYE POR EL BUILD EN EL SERVIDOR
+    container_name: plateagis_api
+    restart: unless-stopped
+    ports:
+    - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: plateagis
+      DB_USER: plateagis
+      DB_PASS: plateagis_pass
+      UPLOADS_DIR: /app/uploads/capas
+      SESSION_SECRET: 1c8fdf97040efbd99c7e929651a7c8904ecf2a16a67d246167d8733589c5a0e0
+    volumes:
+      - geojson_uploads:/app/uploads/capas
+      #- ./uploads/capas:/app/uploads/capas
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - internal
+      - traefik-net
+
+  frontend:
+    #image: plateaweb-frontend SE SUSTITUYE POR EL BUILD EN EL SERVIDOR
+    build: ./frontend
+    
+    container_name: plateagis_web
+    restart: unless-stopped
+
+    ports:
+    - "8100:80"
+    depends_on:
+      - backend
+    networks:
+      - internal
+      - traefik-net
+  pgadmin:
+      build:
+          context: .
+          dockerfile: Dockerfile.pgadmin
+      image: plateagis_pgadmin4_custom
+      container_name: plateagis_pgadmin4
+      hostname: pgadmin4
+      restart: unless-stopped
+      ports:
+          - "8889:80"
+      environment:
+          PGADMIN_DEFAULT_EMAIL: webgis@tidop.es
+          PGADMIN_DEFAULT_PASSWORD: webgis#2025
+      volumes:
+          - pgadmin-data:/var/lib/pgadmin
+      networks:
+          - internal      
+volumes:
+  postgres_data:
+  geojson_uploads:
+  pgadmin-data:
+
+networks:
+  internal:
+    driver: bridge
+  traefik-net:
+    external: true

@@ -1,0 +1,9 @@
+node_modules
+www
+android
+ios
+.git
+.gitignore
+.angular
+*.md
+karma.conf.js

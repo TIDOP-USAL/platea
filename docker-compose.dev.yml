@@ -1,0 +1,93 @@
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: plateagis_db_dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: plateagis
+      POSTGRES_USER: plateagis
+      POSTGRES_PASSWORD: plateagis_pass
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U plateagis"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal_dev
+
+  backend:
+    image: node:20-alpine
+    container_name: plateagis_api_dev
+    working_dir: /app
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: plateagis
+      DB_USER: plateagis
+      DB_PASS: plateagis_pass
+      UPLOADS_DIR: /app/uploads/capas
+      SESSION_SECRET: 1c8fdf97040efbd99c7e929651a7c8904ecf2a16a67d246167d8733589c5a0e0
+    volumes:
+      - ./backend:/app
+      - backend_node_modules:/app/node_modules
+    ports:
+      - "3000:3000"
+    command: sh -c "npm install && npx nodemon src/index.js --legacy-watch"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - internal_dev
+
+  frontend:
+    image: node:20-alpine
+    container_name: plateagis_web_dev
+    working_dir: /app
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    ports:
+      - "8100:8100"
+    command: sh -c "npm install && npx ng serve --host 0.0.0.0 --port 8100 --disable-host-check --poll 1000"
+    depends_on:
+      - backend
+    networks:
+      - internal_dev
+  pgadmin:
+    build:
+        context: .
+        dockerfile: Dockerfile.pgadmin
+    image: plateagis_pgadmin4_custom
+    container_name: plateagis_pgadmin4
+    hostname: pgadmin4
+    restart: unless-stopped
+    ports:
+        - "8889:80"
+    environment:
+        PGADMIN_DEFAULT_EMAIL: webgis@tidop.es
+        PGADMIN_DEFAULT_PASSWORD: webgis#2025
+    volumes:
+        - pgadmin-data:/var/lib/pgadmin
+    networks:
+        - internal_dev
+volumes:
+  postgres_data_dev:
+  backend_node_modules:
+  frontend_node_modules:
+  pgadmin-data:
+
+networks:
+  internal_dev:
+    driver: bridge

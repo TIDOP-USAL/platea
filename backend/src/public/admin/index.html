@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PlateaGIS Admin</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f172a; --surface: #1e293b; --surface2: #273349;
+      --border: #334155; --text: #e2e8f0; --muted: #94a3b8;
+      --accent: #2563eb; --accent-h: #1d4ed8;
+      --danger: #dc2626; --radius: 8px;
+    }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; min-height: 100vh; font-size: 14px; }
+
+    /* Sidebar */
+    .sidebar { width: 220px; min-height: 100vh; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; }
+    .sidebar-logo { padding: 1.25rem 1rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    .sidebar-logo .icon { font-size: 22px; background: var(--accent); width: 36px; height: 36px; border-radius: 7px; display: flex; align-items: center; justify-content: center; }
+    .sidebar-logo h1 { font-size: 15px; font-weight: 600; color: #f1f5f9; }
+    .sidebar-logo span { font-size: 11px; color: var(--muted); }
+    nav { flex: 1; padding: 1rem 0.5rem; }
+    nav .section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); padding: 0.5rem 0.75rem; margin-top: 0.5rem; }
+    nav a { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: var(--radius); color: var(--muted); text-decoration: none; font-size: 13px; transition: background 0.12s, color 0.12s; cursor: pointer; }
+    nav a:hover { background: var(--surface2); color: var(--text); }
+    nav a.active { background: var(--accent); color: white; }
+    .sidebar-user { padding: 1rem; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    .avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: white; flex-shrink: 0; }
+    .sidebar-user-info { flex: 1; min-width: 0; }
+    .sidebar-user-info .name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-user-info .role { font-size: 11px; color: var(--muted); }
+    .btn-logout { background: none; border: none; cursor: pointer; color: var(--muted); font-size: 16px; padding: 4px; border-radius: 4px; transition: color 0.12s; }
+    .btn-logout:hover { color: var(--danger); }
+
+    /* Main */
+    .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; }
+    .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 1.5rem; height: 56px; display: flex; align-items: center; justify-content: space-between; }
+    .topbar h2 { font-size: 16px; font-weight: 600; }
+    .topbar .breadcrumb { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .content { padding: 1.5rem; flex: 1; }
+    .view { display: none; }
+    .view.active { display: block; }
+
+    /* Cards */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .card-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .card-header h3 { font-size: 14px; font-weight: 600; }
+    .card-body { padding: 1.25rem; }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; padding: 8px 12px; color: var(--muted); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+    td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface2); }
+
+    /* Badges */
+    .badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 500; }
+    .badge-blue  { background: #1e3a5f; color: #93c5fd; }
+    .badge-green { background: #14532d; color: #86efac; }
+    .badge-red   { background: #450a0a; color: #fca5a5; }
+    .badge-gray  { background: #1e293b; color: var(--muted); border: 1px solid var(--border); }
+
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--radius); font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: background 0.12s; }
+    .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+    .btn-primary:hover { background: var(--accent-h); }
+    .btn-ghost { background: none; color: var(--muted); border-color: var(--border); }
+    .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+    .btn-danger { background: none; color: var(--danger); border-color: var(--border); }
+    .btn-danger:hover { background: #450a0a; border-color: var(--danger); }
+    .btn-sm { padding: 4px 10px; font-size: 12px; }
+    .btn-row { display: flex; gap: 6px; align-items: center; }
+
+    /* Stats */
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.25rem; }
+    .stat-card .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .stat-card .stat-value { font-size: 26px; font-weight: 600; }
+
+    /* Selector row */
+    .selector-row { display: flex; gap: 10px; margin-bottom: 1.25rem; align-items: center; flex-wrap: wrap; }
+    .selector-row select { padding: 7px 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: 13px; outline: none; }
+
+    /* Modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 100; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; width: 100%; max-width: 500px; padding: 1.5rem; max-height: 90vh; overflow-y: auto; }
+    .modal h3 { font-size: 16px; font-weight: 600; margin-bottom: 1.25rem; }
+
+    /* Form */
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px; }
+    .form-group input, .form-group select { width: 100%; padding: 9px 12px; background: #0f172a; border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: 13px; outline: none; transition: border-color 0.12s; }
+    .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.5rem; }
+
+    /* Alert */
+    .alert { padding: 10px 14px; border-radius: var(--radius); font-size: 13px; margin-bottom: 1rem; display: none; }
+    .alert.visible { display: block; }
+    .alert-error { background: #450a0a; border: 1px solid #7f1d1d; color: #fca5a5; }
+
+    .empty-state { text-align: center; padding: 2.5rem; color: var(--muted); font-size: 13px; }
+
+    .export-section {
+  margin-bottom: 2rem;
+}
+.export-section .card-desc {
+  color: var(--text-muted, #aaa);
+  margin: 0.25rem 0 1rem;
+  font-size: 0.9rem;
+}
+.export-info {
+  background: var(--bg-secondary, #1e1e1e);
+  border-radius: 6px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+.export-info ul {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+.export-info li {
+  padding: 0.2rem 0;
+  font-size: 0.88rem;
+  color: var(--text-secondary, #ccc);
+}
+.btn-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.4rem;
+  font-size: 0.95rem;
+}
+.btn-export:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.export-status {
+  margin-top: 0.75rem;
+  font-size: 0.88rem;
+}
+.export-status.ok    { color: #4caf50; }
+.export-status.error { color: #f44336; }
+  </style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="icon">🗺️</div>
+    <div><h1>PlateaGIS</h1><span>Admin</span></div>
+  </div>
+  <nav>
+    <div class="section-label">Capas</div>
+    <a class="active" onclick="navigate('secciones', this)">📂 Secciones</a>
+    <a onclick="navigate('grupos', this)">🗂️ Grupos</a>
+    <a onclick="navigate('capas', this)">🗺️ Capas</a>
+    <div class="section-label">Sistema</div>
+    <a onclick="navigate('usuarios', this)">👤 Usuarios admin</a>
+  </nav>
+  <div class="sidebar-user">
+    <div class="avatar" id="userAvatar">—</div>
+    <div class="sidebar-user-info">
+      <div class="name" id="userName">Cargando…</div>
+      <div class="role">Administrador</div>
+    </div>
+    <form method="POST" action="/admin/logout" style="margin:0">
+      <button class="btn-logout" title="Cerrar sesión">⏻</button>
+    </form>
+  </div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div>
+      <h2 id="pageTitle">Secciones</h2>
+      <div class="breadcrumb" id="pageBreadcrumb">PlateaGIS / Capas / Secciones</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+ 
+    <!-- Secciones -->
+    <div class="view active" id="view-secciones">
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Secciones</div><div class="stat-value" id="statSecciones">—</div></div>
+        <div class="stat-card"><div class="stat-label">Grupos</div><div class="stat-value" id="statGrupos">—</div></div>
+        <div class="stat-card"><div class="stat-label">Capas</div><div class="stat-value" id="statCapas">—</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <h3>Secciones</h3>
+          <!--<button class="btn btn-primary" onclick="openModal('seccion')">+ Nueva sección</button>-->
+        </div>
+        <table>
+          <thead><tr><th>ID</th><th>Nombre</th><th>Grupos</th><!--<th>Acciones</th>--></tr></thead>
+          <tbody id="tbSecciones"><tr><td colspan="4" class="empty-state">Cargando…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Grupos -->
+    <div class="view" id="view-grupos">
+      <div class="card">
+        <div class="card-header">
+          <h3>Grupos</h3>
+          <button class="btn btn-primary" onclick="openModal('grupo')">+ Nuevo grupo</button>
+        </div>
+        <div class="card-body" style="padding-bottom:0">
+          <div class="selector-row">
+            <label style="font-size:12px;color:var(--muted)">Filtrar por sección:</label>
+            <select id="filterSeccionGrupos" onchange="loadGrupos()">
+              <option value="">Todas</option>
+            </select>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>ID</th><th>Nombre</th><th>Sección</th><th>Orden</th><th>Capas</th><th>Acciones</th></tr></thead>
+          <tbody id="tbGrupos"><tr><td colspan="6" class="empty-state">Cargando…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Capas -->
+    <div class="view" id="view-capas">
+      <div class="card">
+        <div class="card-header">
+          <h3>Capas</h3>
+          <button class="btn btn-primary" onclick="openModal('capa')">+ Nueva capa</button>
+        </div>
+        <div class="card-body" style="padding-bottom:0">
+          <div class="selector-row">
+            <label style="font-size:12px;color:var(--muted)">Sección:</label>
+            <select id="filterSeccionCapas" onchange="onFilterSeccionCapas()">
+              <option value="">Todas</option>
+            </select>
+            <label style="font-size:12px;color:var(--muted)">Grupo:</label>
+            <select id="filterGrupoCapas" onchange="loadCapas()">
+              <option value="">Todos</option>
+            </select>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>ID</th><th>Texto</th><th>Tipo</th><th>Visible</th><th>Grupo</th><th>URL / WMS</th><th>Acciones</th></tr></thead>
+          <tbody id="tbCapas"><tr><td colspan="7" class="empty-state">Cargando…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Usuarios -->
+    <div class="view" id="view-usuarios">
+      <div class="card">
+        <div class="card-header">
+          <h3>Usuarios administradores</h3>
+          <button class="btn btn-primary" onclick="openModal('usuario')">+ Nuevo usuario</button>
+        </div>
+        <table>
+          <thead><tr><th>ID</th><th>Usuario</th><th>Nombre</th><th>Estado</th><th>Último acceso</th><th>Acciones</th></tr></thead>
+          <tbody id="tbUsuarios"><tr><td colspan="6" class="empty-state">Cargando…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal" id="modalBox">
+    <h3 id="modalTitle">Modal</h3>
+    <div class="alert alert-error" id="modalAlert"></div>
+    <div id="modalBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveModal()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let secciones = [], grupos = [], capas = [], usuarios = [];
+let modalType = null, editId = null, currentUserId = null;
+
+(async () => {
+  const me = await api('/admin/api/me');
+  if (me) {
+    document.getElementById('userName').textContent = me.nombre || me.username;
+    document.getElementById('userAvatar').textContent = (me.nombre || me.username)[0].toUpperCase();
+    currentUserId = me.id;
+  }
+  await loadAll();
+})();
+
+async function loadAll() {
+  [secciones, grupos, capas, usuarios] = await Promise.all([
+    api('/admin/api/capas/secciones'),
+    api('/admin/api/capas/grupos'),
+    api('/admin/api/capas/capas'),
+    api('/admin/api/users'),
+  ]);
+  populateSeccionSelects();
+  populateGrupoSelects();
+  renderSecciones();
+  renderGrupos();
+  renderCapas();
+  renderUsuarios();
+  //await loadSecciones();
+  //await loadGrupos();
+  //await loadCapas();
+  //await loadUsuarios();
+  updateStats();
+  await cargarUltimoExport();
+}
+
+async function api(url, method = 'GET', body = null) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(url, opts);
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new Error(err.error || 'Error desconocido');
+  }
+  return res.json();
+}
+
+const pageTitles = {
+  secciones: ['Secciones', 'PlateaGIS / Capas / Secciones'],
+  grupos:    ['Grupos',    'PlateaGIS / Capas / Grupos'],
+  capas:     ['Capas',     'PlateaGIS / Capas / Capas'],
+  usuarios:  ['Usuarios admin', 'PlateaGIS / Sistema / Usuarios'],
+};
+
+function navigate(view, el) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+  if (el) el.classList.add('active');
+  const [title, bc] = pageTitles[view] || [view, view];
+  document.getElementById('pageTitle').textContent = title;
+  document.getElementById('pageBreadcrumb').textContent = bc;
+}
+
+// ── Secciones ──
+async function loadSecciones() {
+  secciones = await api('/admin/api/capas/secciones');
+  
+  populateSeccionSelects();
+  renderSecciones();
+}
+
+function renderSecciones() {
+  const tb = document.getElementById('tbSecciones');
+  if (!secciones.length) { tb.innerHTML = '<tr><td colspan="4" class="empty-state">Sin secciones</td></tr>'; return; }
+  tb.innerHTML = secciones.map(s => {
+    const nGrupos = grupos.filter(g => g.id_seccion === s.id).length;
+
+    return `<tr>
+      <td><span class="badge badge-gray">${s.id}</span></td>
+      <td><strong>${esc(s.nombre)}</strong></td>
+      <td><span class="badge badge-blue">${nGrupos} grupos</span></td>
+      <!--<td><div class="btn-row">
+        <button class="btn btn-ghost btn-sm" onclick="editSeccion(${s.id})">Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteSeccion(${s.id})">Eliminar</button>
+      </div></td>-->
+    </tr>`;
+  }).join('');
+}
+
+function updateStats() {
+  document.getElementById('statSecciones').textContent = secciones.length;
+  document.getElementById('statGrupos').textContent = grupos.length;
+  document.getElementById('statCapas').textContent = capas.length;
+}
+
+function populateSeccionSelects() {
+  ['filterSeccionGrupos','filterSeccionCapas','modalSeccionGrupo','modalSeccionCapa'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const val = el.value;
+    const allOpt = id.startsWith('filter') ? '<option value="">Todas</option>' : '<option value="">Selecciona sección…</option>';
+    el.innerHTML = allOpt + secciones.map(s => `<option value="${s.id}">${esc(s.nombre)}</option>`).join('');
+    el.value = val;
+  });
+}
+
+// ── Grupos ──
+async function loadGrupos() {
+  const secId = document.getElementById('filterSeccionGrupos')?.value;
+  grupos = await api(secId ? `/admin/api/capas/grupos?id_seccion=${secId}` : '/admin/api/capas/grupos');
+  
+  populateGrupoSelects();
+  renderGrupos();
+}
+
+function renderGrupos() {
+  const tb = document.getElementById('tbGrupos');
+  if (!grupos.length) { tb.innerHTML = '<tr><td colspan="6" class="empty-state">Sin grupos</td></tr>'; return; }
+  tb.innerHTML = grupos.map(g => {
+    const sec = secciones.find(s => s.id === g.id_seccion);
+    const nCapas = capas.filter(c => c.id_grupo === g.id).length;
+    return `<tr>
+      <td><span class="badge badge-gray">${g.id}</span></td>
+      <td><strong>${esc(g.nombre)}</strong></td>
+      <td><span class="badge badge-blue">${esc(sec?.nombre || g.id_seccion)}</span></td>
+      <td>${g.orden}</td>
+      <td><span class="badge badge-green">${nCapas} capas</span></td>
+      <td><div class="btn-row">
+        <button class="btn btn-ghost btn-sm" onclick="editGrupo(${g.id})">Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteGrupo(${g.id})">Eliminar</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function populateGrupoSelects() {
+  ['filterGrupoCapas','modalGrupoCapa'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const secFilter = id === 'filterGrupoCapas'
+      ? document.getElementById('filterSeccionCapas')?.value
+      : document.getElementById('modalSeccionCapa')?.value;
+    const filtered = secFilter ? grupos.filter(g => String(g.id_seccion) === String(secFilter)) : grupos;
+    const val = el.value;
+    const allOpt = id.startsWith('filter') ? '<option value="">Todos</option>' : '<option value="">Selecciona grupo…</option>';
+    el.innerHTML = allOpt + filtered.map(g => `<option value="${g.id}">${esc(g.nombre)}</option>`).join('');
+    el.value = val;
+  });
+}
+
+function onFilterSeccionCapas() { populateGrupoSelects(); loadCapas(); }
+
+// ── Capas ──
+async function loadCapas() {
+  const grupoId = document.getElementById('filterGrupoCapas')?.value;
+  capas = await api(grupoId ? `/admin/api/capas/capas?id_grupo=${grupoId}` : '/admin/api/capas/capas');
+ 
+  renderCapas();
+  renderGrupos();
+  updateStats();
+}
+
+function renderCapas() {
+  const tb = document.getElementById('tbCapas');
+  if (!capas.length) { tb.innerHTML = '<tr><td colspan="7" class="empty-state">Sin capas</td></tr>'; return; }
+  tb.innerHTML = capas.map(c => {
+    const g = grupos.find(x => x.id === c.id_grupo);
+    const urlMostrar = c.capa_wms || 'GeoJSON en BD';
+    return `<tr>
+      <td><span class="badge badge-gray">${c.id}</span></td>
+      <td><strong>${esc(c.texto)}</strong></td>
+      <td><span class="badge badge-blue">${esc(c.tipo || '—')}</span></td>
+      <td>${c.checked ? '<span class="badge badge-green">Sí</span>' : '<span class="badge badge-red">No</span>'}</td>
+      <td style="color:var(--muted)">${esc(g?.nombre || c.id_grupo)}</td>
+      <td style="color:var(--muted);font-size:11px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(urlMostrar)}</td>
+      <td><div class="btn-row">
+        ${!c.capa_wms ? `<button class="btn btn-ghost btn-sm" onclick="descargarArchivo(${c.id}, '${esc(c.texto)}')">⬇ JSON</button>` : ''}
+        
+        <button class="btn btn-ghost btn-sm" onclick="editCapa(${c.id})">Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteCapa(${c.id})">Eliminar</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Usuarios ──
+async function loadUsuarios() {
+  usuarios = await api('/admin/api/users');
+  renderUsuarios();
+}
+
+function renderUsuarios() {
+  const tb = document.getElementById('tbUsuarios');
+  if (!usuarios.length) { tb.innerHTML = '<tr><td colspan="6" class="empty-state">Sin usuarios</td></tr>'; return; }
+  tb.innerHTML = usuarios.map(u => `<tr>
+    <td><span class="badge badge-gray">${u.id}</span></td>
+    <td><strong>${esc(u.username)}</strong></td>
+    <td>${esc(u.nombre || '—')}</td>
+    <td>${u.activo ? '<span class="badge badge-green">Activo</span>' : '<span class="badge badge-red">Inactivo</span>'}</td>
+    <td style="color:var(--muted);font-size:12px">${u.last_login ? new Date(u.last_login).toLocaleString('es-ES') : 'Nunca'}</td>
+    <td><div class="btn-row">
+      <button class="btn btn-ghost btn-sm" onclick="editUsuario(${u.id})">Editar</button>
+      ${u.id !== currentUserId ? `<button class="btn btn-danger btn-sm" onclick="deleteUsuario(${u.id})">Eliminar</button>` : ''}
+    </div></td>
+  </tr>`).join('');
+}
+
+// ── Modal ──
+function openModal(type, data = null) {
+  modalType = type; editId = data?.id || null;
+  document.getElementById('modalAlert').classList.remove('visible');
+  const titles = { seccion:'Sección', grupo:'Grupo', capa:'Capa', usuario:'Usuario' };
+  document.getElementById('modalTitle').textContent = (editId ? 'Editar ' : 'Nueva ') + titles[type];
+
+  const bodies = {
+    seccion: `
+      <div class="form-group"><label>Nombre *</label><input id="fNombre" value="${esc(data?.nombre||'')}"></div>`,
+
+    grupo: `
+      <div class="form-group"><label>Nombre *</label><input id="fNombre" value="${esc(data?.nombre||'')}"></div>
+      <div class="form-group"><label>Sección *</label>
+        <select id="modalSeccionGrupo">
+          <option value="">Selecciona sección…</option>
+          ${secciones.map(s=>`<option value="${s.id}" ${data?.id_seccion===s.id?'selected':''}>${esc(s.nombre)}</option>`).join('')}
+        </select></div>
+      <div class="form-group"><label>Orden</label><input id="fOrden" type="number" value="${data?.orden??0}"></div>`,
+
+    capa: `
+      <div class="form-group"><label>Texto (nombre visible) *</label><input id="fTexto" value="${esc(data?.texto||'')}"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Tipo</label>
+          <select id="fTipo">
+            ${['','puntos','relleno','linea','wms', 'wmts',].map(t=>`<option value="${t}" ${(data?.tipo||'')=== t?'selected':''}>${t||'— sin tipo —'}</option>`).join('')}
+          </select></div>
+        <div class="form-group"><label>Orden</label><input id="fOrden" type="number" value="${data?.orden??0}"></div>
+      </div>
+      <div class="form-row">
+      <div class="form-group"><label>Sección (para filtrar grupos)</label>
+        <select id="modalSeccionCapa" onchange="populateGrupoSelects()">
+          <option value="">Selecciona sección…</option>
+          ${secciones.map(s=>`<option value="${s.id}">${esc(s.nombre)}</option>`).join('')}
+        </select></div>
+        
+      <div class="form-group"><label>Grupo *</label>
+        <select id="modalGrupoCapa">
+          <option value="">Selecciona grupo…</option>
+          ${grupos.map(g=>`<option value="${g.id}" ${data?.id_grupo===g.id?'selected':''}>${esc(g.nombre)}</option>`).join('')}
+        </select></div>
+        </div>
+      <div class="form-group"><label>URL (WMS)</label><input id="fUrl" value="${esc(data?.url||'')}"></div>
+      <div class="form-group"><label>Capa WMS</label><input id="fCapaWms" value="${esc(data?.capa_wms||'')}"></div>
+      
+      <div class="form-group"><label>Nombre Source</label><input id="fNombreSource" value="${esc(data?.nombre_source||'')}"></div>
+      <div class="form-group">
+        <label>Archivo GeoJSON</label>
+        <input type="file" id="fArchivoJson" accept=".json,.geojson,.zip" style="padding:6px">
+        ${data?.url_json ? `<div style="margin-top:5px;font-size:11px;color:var(--muted)">Actual: <span style="color:var(--text)">${esc(data.url_json)}</span></div>` : ''}
+      </div>
+      <div class="form-group">
+        <label>Imagen menú capas</label>
+        <input type="file" id="fArchivoImagen" accept="image/*" style="padding:6px">
+        ${data?.imagen ? `<div style="margin-top:5px;font-size:11px;color:var(--muted)">Actual: <span style="color:var(--text)">${esc(data.imagen)}</span> <img src="/uploads/capas/${esc(data.imagen)}" style="height:28px;vertical-align:middle;border-radius:4px;margin-left:6px" onerror="this.style.display='none'"></div>` : ''}
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Color</label><input id="fColor" value="${esc(data?.color||'')}"></div>
+        <div class="form-group"><label>Grosor</label><input id="fGrosor" type="number" step="0.1" value="${data?.grosor??''}"></div>
+      </div>
+      <div class="form-group"><label>Visible por defecto (checked)</label>
+        <select id="fChecked">
+          <option value="true"  ${data?.checked?'selected':''}>Sí</option>
+          <option value="false" ${!data?.checked?'selected':''}>No</option>
+        </select></div>`,
+
+    usuario: `
+      <div class="form-group"><label>Nombre completo</label><input id="fNombreUser" value="${esc(data?.nombre||'')}"></div>
+      ${!editId ? `<div class="form-group"><label>Usuario *</label><input id="fUsername"></div>` : ''}
+      <div class="form-group"><label>${editId?'Nueva contraseña (vacío = no cambiar)':'Contraseña *'}</label><input id="fPassword" type="password"></div>
+      ${editId ? `<div class="form-group"><label>Activo</label>
+        <select id="fActivo">
+          <option value="true" ${data?.activo!==false?'selected':''}>Sí</option>
+          <option value="false" ${data?.activo===false?'selected':''}>No</option>
+        </select></div>` : ''}`,
+  };
+
+  document.getElementById('modalBody').innerHTML = bodies[type];
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); modalType = null; editId = null; }
+function closeModalOutside(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
+function showModalError(msg) { const el = document.getElementById('modalAlert'); el.textContent = msg; el.classList.add('visible'); }
+
+async function saveModal() {
+  document.getElementById('modalAlert').classList.remove('visible');
+  try {
+    if (modalType === 'seccion')  await saveSeccion();
+    else if (modalType === 'grupo')    await saveGrupo();
+    else if (modalType === 'capa')     await saveCapa();
+    else if (modalType === 'usuario')  await saveUsuario();
+    closeModal();
+    await loadAll();
+  } catch (err) { showModalError(err.message); }
+}
+
+async function saveSeccion() {
+  const nombre = document.getElementById('fNombre').value.trim();
+  if (!nombre) throw new Error('El nombre es obligatorio');
+  return editId
+    ? api(`/admin/api/capas/secciones/${editId}`, 'PATCH', { nombre })
+    : api('/admin/api/capas/secciones', 'POST', { nombre });
+}
+
+async function saveGrupo() {
+  const nombre     = document.getElementById('fNombre').value.trim();
+  const id_seccion = Number(document.getElementById('modalSeccionGrupo').value);
+  const orden      = Number(document.getElementById('fOrden').value);
+  if (!nombre)     throw new Error('El nombre es obligatorio');
+  if (!id_seccion) throw new Error('Selecciona una sección');
+  return editId
+    ? api(`/admin/api/capas/grupos/${editId}`, 'PATCH', { nombre, orden })
+    : api('/admin/api/capas/grupos', 'POST', { nombre, id_seccion, orden });
+}
+
+async function saveCapa() {
+  const texto    = document.getElementById('fTexto').value.trim();
+  const id_grupo = Number(document.getElementById('modalGrupoCapa').value);
+  if (!texto)    throw new Error('El texto es obligatorio');
+  if (!id_grupo) throw new Error('Selecciona un grupo');
+
+  const archivoJson   = document.getElementById('fArchivoJson').files[0];
+  const archivoImagen = document.getElementById('fArchivoImagen').files[0];
+
+  // Si hay archivos que subir usamos FormData (multipart), si no JSON normal
+  if (archivoJson || archivoImagen) {
+    const fd = new FormData();
+    fd.append('texto',          texto);
+    fd.append('id_grupo',       id_grupo);
+    fd.append('tipo',           document.getElementById('fTipo').value || '');
+    fd.append('url',            document.getElementById('fUrl').value.trim());
+    fd.append('capa_wms',       document.getElementById('fCapaWms').value.trim());
+    fd.append('nombre_source',  document.getElementById('fNombreSource').value.trim());
+    fd.append('color',          document.getElementById('fColor').value.trim());
+    fd.append('grosor',         document.getElementById('fGrosor').value || '');
+    fd.append('checked',        document.getElementById('fChecked').value);
+    fd.append('orden',          document.getElementById('fOrden').value);
+    if (archivoJson)   fd.append('archivo_json',   archivoJson);
+    if (archivoImagen) fd.append('archivo_imagen', archivoImagen);
+
+    const url = editId
+      ? `/admin/api/capas/capas/${editId}`
+      : '/admin/api/capas/capas';
+    const res = await fetch(url, { method: editId ? 'PATCH' : 'POST', body: fd });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || 'Error al guardar');
+    }
+    return res.json();
+  }
+
+  // Sin archivos nuevos: JSON normal
+  const body = {
+    texto,
+    id_grupo,
+    tipo:          document.getElementById('fTipo').value || null,
+    url:           document.getElementById('fUrl').value.trim() || null,
+    capa_wms:      document.getElementById('fCapaWms').value.trim() || null,
+    nombre_source: document.getElementById('fNombreSource').value.trim() || null,
+																			
+																		   
+    color:         document.getElementById('fColor').value.trim() || null,
+    grosor:        document.getElementById('fGrosor').value ? Number(document.getElementById('fGrosor').value) : null,
+    checked:       document.getElementById('fChecked').value === 'true',
+    orden:         Number(document.getElementById('fOrden').value),
+  };
+  return editId
+    ? api(`/admin/api/capas/capas/${editId}`, 'PATCH', body)
+    : api('/admin/api/capas/capas', 'POST', body);
+}
+
+async function saveUsuario() {
+  const nombre   = document.getElementById('fNombreUser').value.trim();
+  const password = document.getElementById('fPassword').value;
+  if (editId) {
+    const activo = document.getElementById('fActivo').value === 'true';
+    const body = { nombre, activo };
+    if (password) body.password = password;
+    return api(`/admin/api/users/${editId}`, 'PATCH', body);
+  } else {
+    const username = document.getElementById('fUsername').value.trim();
+    if (!username) throw new Error('El usuario es obligatorio');
+    if (!password) throw new Error('La contraseña es obligatoria');
+    return api('/admin/api/users', 'POST', { username, password, nombre });
+  }
+}
+
+function editSeccion(id) { openModal('seccion', secciones.find(s=>s.id===id)); }
+function editGrupo(id)   { openModal('grupo',   grupos.find(g=>g.id===id)); }
+function editCapa(id)    { openModal('capa',    capas.find(c=>c.id===id)); }
+function editUsuario(id) { openModal('usuario', usuarios.find(u=>u.id===id)); }
+
+async function deleteSeccion(id) {
+  if (!confirm('¿Eliminar sección? Se eliminarán sus grupos y capas en cascada.')) return;
+  await api(`/admin/api/capas/secciones/${id}`, 'DELETE'); await loadAll();
+}
+async function deleteGrupo(id) {
+  if (!confirm('¿Eliminar grupo? Se eliminarán sus capas en cascada.')) return;
+  await api(`/admin/api/capas/grupos/${id}`, 'DELETE'); await loadAll();
+}
+async function deleteCapa(id) {
+  if (!confirm('¿Eliminar esta capa?')) return;
+  await api(`/admin/api/capas/capas/${id}`, 'DELETE'); await loadAll();
+}
+async function deleteUsuario(id) {
+  if (!confirm('¿Eliminar usuario administrador?')) return;
+  await api(`/admin/api/users/${id}`, 'DELETE'); await loadUsuarios();
+}
+
+function esc(str) {
+  return String(str ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+
+/***EXPORTAR FICHERO ZIP **/
+async function cargarUltimoExport() {
+  const el = document.getElementById('export-ultimo');
+  try {
+    const ultimo = await api('/api/export/last');
+    if (!ultimo) {
+      el.textContent = 'Todavía no se ha generado ningún paquete.';
+    } else {
+      const fecha = new Date(ultimo.exportado_en).toLocaleString();
+      el.textContent = `Último paquete: ${fecha} (${ultimo.tipo}, ${ultimo.filas_contenido} filas de contenido)`;
+    }
+    el.className = 'export-status';
+    el.style.display = 'block';
+  } catch (err) {
+    console.error('[export] Error obteniendo último export:', err);
+  }
+}
+
+async function generarPaqueteAndroid(modo) {
+  const btn      = document.getElementById(`btn-export-${modo}`);
+  const iconEl   = document.getElementById(`export-icon-${modo}`);
+  const labelEl  = document.getElementById(`export-label-${modo}`);
+  const statusEl = document.getElementById('export-status');
+  const labelOriginal = labelEl.textContent;
+
+  // Estado: cargando
+  btn.disabled   = true;
+  iconEl.textContent  = '⏳';
+  labelEl.textContent = 'Generando paquete...';
+  statusEl.style.display = 'none';
+  statusEl.className = 'export-status';
+ 
+  try {
+    const response = await fetch(`/api/export/android?modo=${modo}`);
+ 
+    if (!response.ok) {
+      let msg = `Error ${response.status}`;
+      try { const body = await response.json(); msg = body.error || msg; } catch {}
+      throw new Error(msg);
+    }
+ 
+    // Obtener el nombre del archivo del header Content-Disposition
+    const disposition = response.headers.get('Content-Disposition') || '';
+    const match = disposition.match(/filename="?([^"]+)"?/);
+    const filename = match ? match[1] : 'plateagis-android.zip';
+ 
+    // Descargar el blob y lanzar descarga en el navegador
+    const blob = await response.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+ 
+    // Estado: éxito
+    statusEl.textContent   = `✅ Paquete descargado: ${filename}`;
+    statusEl.className     = 'export-status ok';
+    statusEl.style.display = 'block';
+
+    await cargarUltimoExport();
+ 
+  } catch (err) {
+    console.error('[export]', err);
+    statusEl.textContent   = `❌ Error al generar el paquete: ${err.message}`;
+    statusEl.className     = 'export-status error';
+    statusEl.style.display = 'block';
+  } finally {
+    // Restaurar botón
+    btn.disabled        = false;
+    iconEl.textContent  = '⬇️';
+    labelEl.textContent = labelOriginal;
+  }
+  
+}
+
+/*Funcion para el boton descargar json*/
+  async function descargarArchivo(idCapa, nombreCapa) {
+    try {
+      const res = await fetch(`/api/capas/${idCapa}/geojson`);
+      if (!res.ok) throw new Error('No se pudo descargar');
+      const geojson = await res.json();
+      const blob = new Blob([JSON.stringify(geojson, null, 2)], { type: 'application/geo+json' });
+      const a    = document.createElement('a');
+      a.href     = URL.createObjectURL(blob);
+      a.download = `${nombreCapa}.geojson`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch (err) {
+      alert('idCapa: ' + idCapa + ' nombreCapa: ' + nombreCapa + ' Error al descargar: ' + err.message);
+    }
+  }
+</script>
+</body>
+</html>

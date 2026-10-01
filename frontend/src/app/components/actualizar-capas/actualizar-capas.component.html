@@ -1,0 +1,162 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Actualizar capas</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="cerrar()" [disabled]="vista === 'progreso'">
+        <ion-icon name="close-outline" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+
+  @switch (vista) {
+
+    @case ('buscando') {
+      <div class="centrado">
+        <ion-spinner name="crescent"></ion-spinner>
+        <p>Buscando cambios en el servidor…</p>
+      </div>
+    }
+
+    @case ('error') {
+      <div class="centrado">
+        <ion-icon name="alert-circle-outline" class="icono-grande" color="danger"></ion-icon>
+        <p>{{ mensajeError }}</p>
+        <ion-button (click)="buscarCambios()">
+          <ion-icon name="refresh-outline" slot="start"></ion-icon>Reintentar
+        </ion-button>
+      </div>
+    }
+
+    @case ('lista') {
+      @if (nadaQueHacer && totalOpcionales === 0) {
+        <div class="centrado">
+          <ion-icon name="checkmark-circle-outline" class="icono-grande" color="success"></ion-icon>
+          <p>Todo está actualizado.</p>
+          <ion-note>{{ numAlDia }} capas al día</ion-note>
+        </div>
+      } @else {
+
+        @if (obligatorias.length) {
+          <ion-list>
+            <ion-list-header><ion-label>Se descargarán automáticamente</ion-label></ion-list-header>
+            @for (item of obligatorias; track item.capa.id) {
+              <ion-item>
+                <ion-label>
+                  {{ item.capa.texto }}
+                  @if (!item.sinContenido) { <p>{{ formatoTamano(item.capa.tamano_bytes) }}</p> }
+                </ion-label>
+                <ion-badge slot="end" [color]="item.estado === 'nueva' ? 'primary' : 'warning'">
+                  {{ item.estado === 'nueva' ? 'Nueva' : 'Con cambios' }}
+                </ion-badge>
+              </ion-item>
+            }
+          </ion-list>
+        }
+
+        @if (totalOpcionales) {
+          <ion-item lines="none">
+            <ion-checkbox [checked]="todasMarcadas" (ionChange)="alternarTodas($event.detail.checked)">
+              Seleccionar todas
+            </ion-checkbox>
+          </ion-item>
+          @for (grupo of gruposOpcionales; track grupo.titulo) {
+            <ion-list>
+              <ion-list-header><ion-label>{{ grupo.titulo }}</ion-label></ion-list-header>
+              @for (item of grupo.items; track item.capa.id) {
+                <ion-item>
+                  <ion-checkbox
+                    [checked]="seleccionadas.has(item.capa.id)"
+                    (ionChange)="alternar(item, $event.detail.checked)">
+                    <ion-label>
+                      {{ item.capa.texto }}
+                      <p>
+                        @if (item.estado === 'nueva') { {{ formatoTamano(item.capa.tamano_bytes) }} }
+                        @else { Solo se descargan los cambios }
+                      </p>
+                    </ion-label>
+                  </ion-checkbox>
+                  <ion-badge slot="end" [color]="item.estado === 'nueva' ? 'primary' : 'warning'">
+                    {{ item.estado === 'nueva' ? 'Nueva' : 'Con cambios' }}
+                  </ion-badge>
+                </ion-item>
+              }
+            </ion-list>
+          }
+        }
+
+        @if (hayQueEliminar) {
+          <ion-note class="nota">
+            Se quitarán {{ plan!.eliminadasEnServidor.length }} capas que ya no existen en el servidor.
+          </ion-note>
+        }
+        @if (numAlDia) {
+          <ion-note class="nota">{{ numAlDia }} capas ya están al día.</ion-note>
+        }
+
+        <div class="acciones">
+          @if (itemsADescargar.length) {
+            <ion-note>
+              {{ itemsADescargar.length }} capas
+              @if (tamanoEstimado) { · ≈ {{ formatoTamano(tamanoEstimado) }} }
+              @if (hayCapasConCambios) { {{ tamanoEstimado ? '+' : '·' }} cambios }
+            </ion-note>
+          }
+          <ion-button expand="block" (click)="descargar()" [disabled]="nadaQueHacer">
+            <ion-icon name="cloud-download-outline" slot="start"></ion-icon>
+            {{ itemsADescargar.length ? 'Descargar' : 'Aplicar' }}
+          </ion-button>
+        </div>
+      }
+    }
+
+    @case ('progreso') {
+      <div class="centrado">
+        <p><strong>{{ progreso?.capa || 'Preparando…' }}</strong></p>
+        <ion-progress-bar [value]="porcentaje"></ion-progress-bar>
+        <p class="fase">
+          @if (progreso) { Capa {{ progreso.indice }} de {{ progreso.total }} }
+        </p>
+        <ion-note>{{ textoFase() }}</ion-note>
+        <ion-note class="nota">No cierres la aplicación hasta que termine.</ion-note>
+      </div>
+    }
+
+    @case ('resultado') {
+      <div class="centrado">
+        @if (resultado && !resultado.errores.length) {
+          <ion-icon name="checkmark-circle-outline" class="icono-grande" color="success"></ion-icon>
+          <p>Actualización completada.</p>
+        } @else {
+          <ion-icon name="alert-circle-outline" class="icono-grande" color="warning"></ion-icon>
+          <p>Actualización terminada con errores.</p>
+        }
+        <ion-note>
+          {{ resultado?.correctas?.length ?? 0 }} capas actualizadas
+          @if (resultado?.eliminadas?.length) { · {{ resultado!.eliminadas.length }} eliminadas }
+        </ion-note>
+      </div>
+
+      @if (resultado?.errores?.length) {
+        <ion-list>
+          <ion-list-header><ion-label color="danger">No se pudieron descargar</ion-label></ion-list-header>
+          @for (e of resultado!.errores; track e.id) {
+            <ion-item>
+              <ion-label class="ion-text-wrap">
+                {{ e.texto }}
+                <p>{{ e.error }}</p>
+              </ion-label>
+            </ion-item>
+          }
+        </ion-list>
+        <ion-button expand="block" fill="outline" (click)="buscarCambios()">
+          <ion-icon name="refresh-outline" slot="start"></ion-icon>Reintentar las que faltan
+        </ion-button>
+      }
+
+      <ion-button expand="block" (click)="cerrar()">Cerrar</ion-button>
+    }
+  }
+</ion-content>

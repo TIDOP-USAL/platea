@@ -1,0 +1,10 @@
+{
+  "name": "plateaApp",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular-standalone",
+  "server": {
+    "host": "localhost"
+  }
+}
