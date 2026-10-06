@@ -11,6 +11,7 @@ const  pool  = require('./db');           // tu pool de PostgreSQL existente
 const authRoutes = require('./routes/auth');
 const adminCapasRoutes = require('./routes/admin-capas');
 const adminUsersRoutes = require('./routes/admin-users');
+const adminContenidoRoutes = require('./routes/admin-contenido');
 const { requireAuth } = require('./middleware/auth');
 const exportRouter = require('./routes/export');
 
@@ -60,6 +61,9 @@ app.get('/admin', requireAuth, (req, res) => {
 
 // ── API de capas — protegida ────────────────────────────────
 app.use('/admin/api/capas', adminCapasRoutes);
+
+// ── API de contenido de capas (features) — protegida ────────
+app.use('/admin/api/contenido', adminContenidoRoutes);
 
 // ── API de usuarios — protegida ─────────────────────────────
 app.use('/admin/api/users', adminUsersRoutes);
