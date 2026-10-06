@@ -1,11 +1,8 @@
-/* ==========================================================================
-   Estilos Globales para Popups / Modales Inyectados por [innerHTML]
-   ========================================================================== */
 .popup-card {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 0; /* Inikkat ti padding tapno ad-adda a nadalus */
+  padding: 0; 
 }
 
 .popup-title {
@@ -17,7 +14,7 @@
   color: #ffffff;
   border-bottom: 1px solid #27272a;
   padding-bottom: 10px;
-  padding-right: 30px; /* Mangted iti lugar tapno di matupakan ti X */
+  padding-right: 30px; 
 }
 
 .popup-img {
@@ -50,18 +47,17 @@
   overflow-y: auto;
   border-radius: 20px;
 
-  /* Botón de cerrar X - Naidirekta ti posisionna iti titulo */
   .btn-cerrar-drch {
     position: absolute;
-    top: 14px;            /* Naisurot eksakto ti ngato ti titulo */
+    top: 14px;          
     right: 14px;
     z-index: 10;
     margin: 0;
     padding: 0;
     height: 28px;
     width: 28px;
-    background: transparent !important; /* Maikkat ti background color */
-    box-shadow: none !important;        /* Maikkat ti sombra */
+    background: transparent !important; 
+    box-shadow: none !important;       
     --background: transparent;
     --box-shadow: none;
     --color: #a1a1aa;
@@ -84,7 +80,7 @@
   }
 
   .modal-body {
-    margin-top: 0; /* Inikkat ti sobrang bakante nga espasio iti ngato */
+    margin-top: 0; 
     width: 100%;
   }
 }
@@ -163,6 +159,5 @@ ion-modal.modal-info.modal-redondo {
   --box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
   --background: #18181b;
 
-  /* Centrado en pantalla */
   margin: auto;
 }

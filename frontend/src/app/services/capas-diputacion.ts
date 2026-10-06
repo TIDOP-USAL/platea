@@ -8,23 +8,38 @@ import { Grupo, Capa } from '../models/capas.model';
   providedIn: 'root',
 })
 export class CapasDiputacion implements OnInit {
+  /*grupoDiputacion = [{ id: 0, name: 'principal' },
+  { id: 1, name: 'Áreas de interés' }
+  ];
+  capas = [
+    { id: 0, idGrupo: 0, tipo: 'puntos', texto: 'Hidrantes', imagen: './assets/capas/icons/hidrantes.png', nombreSource: 'Hidrantes', nombreJson: './assets/capas/hidrantes.geojson', checked: false },
+    { id: 1, idGrupo: 0, tipo: 'puntos', texto: 'Inventario de medios y recursos', imagen: './assets/capas/icons/inventario-medios-recursos.png', nombreSource: 'InventarioRecursos', nombreJson: './assets/capas/inventario-medios-recursos.geojson', checked: false },
+    { id: 2, idGrupo: 0, tipo: 'relleno', texto: 'Terminos Municipales', imagen: './assets/capas/icons/terminos-municipales.png', nombreSource: 'TerminosMunicipales', nombreJson: './assets/capas/terminos-municipales.geojson', color: '#0000ff', checked: false },
+    { id: 3, idGrupo: 0, tipo: 'puntos', texto: 'Poligonos Industriales', imagen: './assets/capas/icons/poligonos-industriales.png', nombreSource: 'PoligonosIndustriales', nombreJson: './assets/capas/poligonos-industriales.geojson', checked: false },
+    { id: 4, idGrupo: 0, tipo: 'puntos', texto: 'Estaciones de Servicios', imagen: './assets/capas/icons/estaciones-servicio.png', nombreSource: 'EstacionesServicio', nombreJson: './assets/capas/estaciones-servicio.geojson', checked: false },
+    { id: 5, idGrupo: 0, tipo: 'puntos', texto: 'Policia Local', imagen: './assets/capas/icons/policia-local.png', nombreSource: 'PoliciaLocal', nombreJson: './assets/capas/policia-local.geojson', checked: false },
+    { id: 6, idGrupo: 0, tipo: 'linea', texto: 'Rutas Escolares', imagen: './assets/capas/icons/rutas-escolares.png', nombreSource: 'RutasEscolares', nombreJson: './assets/capas/rutas-escolares.geojson', color: '#0000ff', grosro: 1, checked: false },
+    { id: 7, idGrupo: 0, tipo: 'puntos', texto: 'Centros Salud', imagen: './assets/capas/icons/centros-salud.png', nombreSource: 'CentrosSalud', nombreJson: './assets/capas/centros-salud.geojson', checked: false },
+    { id: 8, idGrupo: 0, tipo: 'puntos', texto: 'Parques Extincion Salvamento', imagen: './assets/capas/icons/bomberos-tipo2.png', nombreSource: 'ParquesExtincionSalvamento', nombreJson: './assets/capas/parques-extincion-salvamento.geojson', checked: false },
+    { id: 9, idGrupo: 0, tipo: 'relleno', texto: 'Interfaz Urbano Hidráulica', imagen: './assets/capas/icons/interfaz-hidraulica.png', nombreSource: 'UrbanoHidraulica', nombreJson: './assets/capas/interfaz-urbano-hidraulica.zip', color: '#0000ff', checked: false },
+    { id: 10, idGrupo: 0, tipo: 'relleno', texto: 'Interfaz Urbano Forestal', imagen: './assets/capas/icons/interfaz-forestal.png', nombreSource: 'UrbanoForestal', nombreJson: './assets/capas/interfaz-urbano-forestal.zip', color: '#0000ff', checked: false },
+    { id: 11, idGrupo: 0, tipo: 'relleno', texto: 'Área Riesgo Incendio Por Arbolado Proximo Lineas Alta Tension ', imagen: './assets/capas/icons/riesgo-incendio.png', nombreSource: 'RiesgoIncendioArbolado', nombreJson: './assets/capas/riesgo-incendio-arbolado.geojson', color: '#0000ff', checked: false },
+    { id: 12, idGrupo: 1, tipo: 'linea', texto: 'Ávila (provincia)', imagen: './assets/capas/icons/area-interes-avila.png', nombreSource: 'AvilaProvincia', nombreJson: './assets/capas/area-interes/avila.geojson', color: '#0051ff', grosor: 4, checked: false },
+    { id: 13, idGrupo: 1, tipo: 'linea', texto: 'Área interés PLATEA', imagen: './assets/capas/icons/area-interes-platea.png', nombreSource: 'AvilaPlatea', nombreJson: './assets/capas/area-interes/platea.geojson', color: '#ff0000', grosor: 2, checked: false },
+    { id: 14, idGrupo: 1, tipo: 'linea', texto: 'Provincias Colindantes', imagen: './assets/capas/icons/area-interes-provincias.png', nombreSource: 'AvilaProvinciaColindantes', nombreJson: './assets/capas/area-interes/provincias.geojson', grosor: 1, color: '#000000', checked: false },
+  ];*/
 
   gruposAbiertos: { [id: number]: boolean } = { 1: true };
-  modalClick$ = new Subject<string>();
-  
+  modalClick$ = new Subject<string>();  // emite HTML cuando se pincha un punto
+
   grupoDiputacion: Grupo[] = [];
   capas: Capa[] = [];
 
   constructor(private capasService: CapasService) {}
 
-  async ngOnInit(): Promise<void> {}
+  async ngOnInit(): Promise<void> {
+    // Funciona igual en Android (SQLite) y en Web (HTTP)
 
-  // 👇 AÑADE ESTA FUNCIÓN PARA SOLUCIONAR EL ERROR DE COMPILACIÓN
-  toggleGrupoDiputacion(grupo: any): void {
-    const idGrupo = typeof grupo === 'object' ? grupo?.id : grupo;
-    if (idGrupo !== undefined) {
-      this.gruposAbiertos[idGrupo] = !this.gruposAbiertos[idGrupo];
-    }
   }
 
   async cargarCapasDiputacion(map: maplibregl.Map) {
@@ -32,10 +47,14 @@ export class CapasDiputacion implements OnInit {
 
     if (this.capas.length == 0){
       for (const grupo of this.grupoDiputacion) {
+        //this.capas.push(...await this.capasService.getCapasGrupo(grupo.id));
         const capas = await this.capasService.getCapasGrupo(grupo.id);
         this.capas.push(...capas);
       }
     }
+        
+    //console.log("capas Diputacion", this.capas);
+    //console.log("capas grupoDiputacion", this.grupoDiputacion);
     
     for (const capa of this.capas) {
       await this.cargarCapaDiputacion(map, capa);
@@ -69,15 +88,17 @@ export class CapasDiputacion implements OnInit {
     }
   }
 
-  /**Funciones para cargar las capas que pueden ser relleno, puntos o lineas**/
-  async cargarCapaRelleno(map: maplibregl.Map, urlGeoJSON: string, nombreSource: string, checked: boolean, color: string) {
+  /**Funciones para cargar las capas que pueden relleno, puntos o lineas*/
+  async cargarCapaRelleno(map: maplibregl.Map, urlGeoJSON: string, nombreSource: string, checked: boolean, color: string,) {
     let nombreCapa = nombreSource;
-    const respuesta = await fetch(urlGeoJSON); 
+    const respuesta = await fetch(urlGeoJSON);
     const datosJson = await respuesta.json();
+
     map.addSource(nombreSource, {
       'type': 'geojson',
       'data': datosJson,
     });
+
     map?.addLayer({
       'id': nombreCapa,
       'type': 'fill',
@@ -104,13 +125,17 @@ export class CapasDiputacion implements OnInit {
   async cargarCapaPuntos(map: maplibregl.Map, urlGeoJSON: string, nombreSource: string, imagen: string, checked: boolean) {
     let nombreImagen = nombreSource;
     let nombreCapa = nombreSource;
+
     await this.cargarImagen(map, nombreImagen, imagen);
+
     const respuesta = await fetch(urlGeoJSON);
     const datosJson = await respuesta.json();
+
     map?.addSource(nombreSource, {
       'type': 'geojson',
       'data': datosJson,
     });
+
     map?.addLayer({
       'id': nombreCapa,
       'type': 'symbol',
@@ -125,6 +150,7 @@ export class CapasDiputacion implements OnInit {
     });
 
     let nombreEtiqueta = '';
+
     if (nombreSource == "Hidrantes") {
       nombreEtiqueta = "id";
     } else if (nombreSource == "InventarioRecursos") {
@@ -160,6 +186,7 @@ export class CapasDiputacion implements OnInit {
     });
 
     map?.on('click', nombreCapa, (e) => {
+      //Cargar en el modal la informacion del punto pinchado
       const feature = e.features?.[0];
       const propiedades = feature?.properties;
       let contenido = '';
@@ -176,7 +203,8 @@ export class CapasDiputacion implements OnInit {
         contenido = this.datosPoliciaLocal(propiedades, feature?.geometry);
       }
       
-      if (contenido != '') this.modalClick$.next(contenido);
+      if (contenido != '')
+        this.modalClick$.next(contenido);
     });
   }
 
@@ -184,10 +212,12 @@ export class CapasDiputacion implements OnInit {
     let nombreCapa = nombreSource;
     const respuesta = await fetch(urlGeoJSON);
     const datosJson = await respuesta.json();
+
     map?.addSource(nombreSource, {
       'type': 'geojson',
       'data': datosJson,
     });
+
     map?.addLayer({
       'id': nombreSource,
       'type': 'line',
@@ -204,24 +234,30 @@ export class CapasDiputacion implements OnInit {
     });
 
     map?.on('click', nombreCapa, (e) => {
+      //Cargar en el modal la informacion del punto pinchado
       let contenido = '';
+
       for (const elemento of e.features!) {
         const propiedades = elemento.properties;
         contenido += this.datosRutasEscolares(propiedades);
       }
+
       this.modalClick$.next(contenido);
     });
   }
 
-  async cargarCapaTerminosMunicipales(map: maplibregl.Map, urlGeoJSON: string, nombreSource: string, checked: boolean, color: string) {
+  async cargarCapaTerminosMunicipales(map: maplibregl.Map, urlGeoJSON: string, nombreSource: string, checked: boolean, color: string,) {
     let nombreCapa = nombreSource;
     const respuesta = await fetch(urlGeoJSON);
     const datosJson = await respuesta.json();
+
+    console.log('Propiedades:', datosJson.features[0].properties);
 
     map.addSource(nombreSource, {
       'type': 'geojson',
       'data': datosJson,
     });
+
     map?.addLayer({
       'id': nombreCapa,
       'type': 'line',
@@ -236,6 +272,7 @@ export class CapasDiputacion implements OnInit {
         'line-width': 2
       }
     });
+
     map?.addLayer({
       id: nombreSource + '_label',
       type: 'symbol',
@@ -255,6 +292,7 @@ export class CapasDiputacion implements OnInit {
         'text-halo-width': 2,
       }
     });
+
     map?.addLayer({
       'id': nombreCapa + "_fill",
       'type': 'fill',
@@ -267,15 +305,21 @@ export class CapasDiputacion implements OnInit {
         'fill-opacity': 0.3,
       }
     });
+
     map?.on('click', nombreCapa + "_fill", (e) => {
+      console.log("click");
+      //Cargar en el modal la informacion del punto pinchado
       const propiedades = e.features?.[0].properties;
-      let contenido = this.datosTerminosMunicipales(propiedades);
+      let contenido = '';
+      contenido = this.datosTerminosMunicipales(propiedades);
       this.modalClick$.next(contenido);
     });
   }
 
   async cargarCapaPuntosCentrosSalud(map: maplibregl.Map, urlGeoJSON: string, nombreSource: string, checked: boolean) {
+
     let nombreCapa = nombreSource;
+
     const iconos = [
       { id: 'icono-hospital', url: '/assets/capas/icons/hospital.png' },
       { id: 'icono-centro-guardia', url: '/assets/capas/icons/centro-guardia.png' },
@@ -283,15 +327,19 @@ export class CapasDiputacion implements OnInit {
       { id: 'icono-centro-salud', url: '/assets/capas/icons/centro-salud.png' },
       { id: 'icono-atencion-continuada', url: '/assets/capas/icons/puntos-atencion-continuada.png' },
     ];
+
     for (const icono of iconos) {
       await this.cargarImagen(map, icono.id, icono.url);
     }
+
     const respuesta = await fetch(urlGeoJSON);
     const datosJson = await respuesta.json();
+
     map?.addSource(nombreSource, {
       'type': 'geojson',
       'data': datosJson,
     });
+
     map?.addLayer({
       'id': nombreCapa,
       'type': 'symbol',
@@ -312,6 +360,7 @@ export class CapasDiputacion implements OnInit {
         'icon-ignore-placement': true,
       },
     });
+
     map?.addLayer({
       id: nombreSource + '_label',
       type: 'symbol',
@@ -333,13 +382,17 @@ export class CapasDiputacion implements OnInit {
         'text-halo-width': 2,
       }
     });
+
     map?.on('click', nombreCapa, (e) => {
+      //Cargar en el modal la informacion del punto pinchado
       let contenido = '';
+
       for (const elemento of e.features!) {
         const propiedades = elemento.properties;
         const geometry = elemento.geometry;
-        contenido += this.datosCentrosSalud(propiedades , geometry);
+        contenido += this.datosCentrosSalud(propiedades, geometry);
       }
+
       this.modalClick$.next(contenido);
     });
   }
@@ -347,6 +400,7 @@ export class CapasDiputacion implements OnInit {
   async cargarCapaPuntosParquesExtincionSalvamento(map: maplibregl.Map, urlGeoJSON: string, nombreSource: string, checked: boolean) {
     const respuesta = await fetch(urlGeoJSON);
     const datosJson = await respuesta.json();
+
     const iconos = [
       { id: 'icono-bomberos1', url: '/assets/capas/icons/bomberos-tipo1.png' },
       { id: 'icono-bomberos2', url: '/assets/capas/icons/bomberos-tipo2.png' },
@@ -359,10 +413,12 @@ export class CapasDiputacion implements OnInit {
     for (const icono of iconos) {
       await this.cargarImagen(map, icono.id, icono.url);
     }
+
     map?.addSource(nombreSource, {
       'type': 'geojson',
       'data': datosJson,
     });
+
     map?.addLayer({
       'id': nombreSource,
       'type': 'symbol',
@@ -384,6 +440,7 @@ export class CapasDiputacion implements OnInit {
         'icon-ignore-placement': true,
       }
     });
+
     map?.addLayer({
       id: nombreSource + '_label',
       type: 'symbol',
@@ -410,11 +467,13 @@ export class CapasDiputacion implements OnInit {
   async cargarCapaInterfazForestal(map: maplibregl.Map, urlGeoJSON: string, nombreSource: string, checked: boolean) {
     const respuesta = await fetch(urlGeoJSON);
     const data = await respuesta.json();
+
     map?.addSource(nombreSource, {
       'type': 'geojson',
       'data': data,
       'tolerance': 0.5,
     });
+
     map?.addLayer({
       'id': nombreSource,
       'type': 'fill',
@@ -437,6 +496,7 @@ export class CapasDiputacion implements OnInit {
         ],
       }
     });
+
     map?.addLayer({
       'id': nombreSource + '_border',
       'type': 'line',
@@ -461,11 +521,28 @@ export class CapasDiputacion implements OnInit {
   async cargarCapaInterfazHidraulica(map: maplibregl.Map, urlGeoJSON: string, nombreSource: string, checked: boolean) {
     const respuesta = await fetch(urlGeoJSON);
     const data = await respuesta.json();
+
     map?.addSource(nombreSource, {
       'type': 'geojson',
       'data': data,
     });
+
     this.cargarImagen(map, 'cuadricula-hidraulica', '/assets/capas/icons/cuadricula.png');
+
+    map?.addLayer({
+      'id': `${nombreSource}_pattern`,
+      'type': 'fill',
+      'source': nombreSource,
+      'layout': {
+        'visibility': checked ? 'visible' : 'none',
+      },
+      'filter': ['==', ['get', 'type'], 'SE'],
+      'paint': {
+        'fill-pattern': 'cuadricula-hidraulica',
+        'fill-opacity': 1,
+      }
+    });
+
     map?.addLayer({
       'id': nombreSource,
       'type': 'fill',
@@ -486,19 +563,7 @@ export class CapasDiputacion implements OnInit {
         ],
       }
     });
-    map?.addLayer({
-      'id': `${nombreSource}_pattern`,
-      'type': 'fill',
-      'source': nombreSource,
-      'layout': {
-        'visibility': checked ? 'visible' : 'none',
-      },
-      'filter': ['==', ['get', 'type'], 'SE'],
-      'paint': {
-        'fill-pattern': 'cuadricula-hidraulica',
-        'fill-opacity': 1,
-      }
-    });
+
     map?.addLayer({
       'id': nombreSource + '_border',
       'type': 'line',
@@ -522,10 +587,12 @@ export class CapasDiputacion implements OnInit {
   async cargarCapaRiesgoIncendioArbolado(map: maplibregl.Map, urlGeoJSON: string, nombreSource: string, checked: boolean) {
     const respuesta = await fetch(urlGeoJSON);
     const datosJson = await respuesta.json();
+
     map?.addSource(nombreSource, {
       'type': 'geojson',
       'data': datosJson,
     });
+
     map?.addLayer({
       'id': nombreSource,
       'type': 'fill',
@@ -547,6 +614,7 @@ export class CapasDiputacion implements OnInit {
         ],
       }
     });
+
     map?.addLayer({
       'id': nombreSource + '_border',
       'type': 'line',
@@ -562,10 +630,13 @@ export class CapasDiputacion implements OnInit {
     });
   }
 
-  /* ==========================================================================
-     MÉTODOS PARA CONSTRUIR EL HTML INTERNO DEL MODAL (ESTILIZADOS)
-     ========================================================================== */
+  /**Fin funciones para cargar las capas */
 
+
+
+
+
+  /**Funciones para mostrar la información de cada capa*/
   datosTerminosMunicipales(propiedades: any): string {
     const name = propiedades?.['NAMEUNIT'] ?? 'N/D';
     const pob = propiedades?.['pob2020'] ?? 'N/D';
@@ -583,12 +654,14 @@ export class CapasDiputacion implements OnInit {
         <div class="popup-title">
           <span>🏛️</span> <span>${name}</span>
         </div>
+
         <div class="popup-info">
           <div class="popup-row"><span class="label">Población (2020)</span><span class="value">${pob} hab.</span></div>
           <div class="popup-row"><span class="label">Comarca</span><span class="value">${comarca}</span></div>
           <div class="popup-row"><span class="label">Superficie</span><span class="value">${km2} km²</span></div>
           <div class="popup-row"><span class="label">Parque Bomberos</span><span class="value badge">${parque}</span></div>
         </div>
+
         <div class="popup-links">
           ${crearBotonGrs('GRS Incendio Urbano', propiedades?.['grs_urban_fire'])}
           ${crearBotonGrs('GRS Incendio Forestal', propiedades?.['grs_non_urban_fire'])}
@@ -614,6 +687,7 @@ export class CapasDiputacion implements OnInit {
         <div class="popup-title">
           <span>📦</span> <span>${nombre}</span>
         </div>
+
         <div class="popup-info">
           ${mostrar('ID Formulario', propiedades?.id)}
           ${mostrar('Fecha actualización', propiedades?.date)}
@@ -665,28 +739,44 @@ export class CapasDiputacion implements OnInit {
     `;
   }
 
- datosHidrantes(propiedades: any): string {
+  datosHidrantes(propiedades: any): string {
   if (!propiedades) return '<p class="popup-empty">Sin información disponible</p>';
 
   const id = propiedades.id ?? 'N/D';
   const lat = propiedades.lat ?? 'N/D';
   const long = propiedades.long ?? 'N/D';
   const origen = propiedades.source ?? 'N/D';
-  const tipoConector = propiedades.connector_type || 'No indicado';
   const fecha = propiedades.date ?? 'N/D';
   const urlMaps = propiedades.url_google_maps;
+
+  // Mapeo Tipo de Conector
+  const mapaTipoConector: Record<string | number, string> = {
+    1: 'Racor Barcelona',
+    2: 'Racor Madrid',
+    3: 'Racor rosca 40 mm'
+  };
+  const rawConector = propiedades.connector_type ?? propiedades.tipo_conector;
+  const tipoConector = (rawConector !== null && rawConector !== undefined && mapaTipoConector[rawConector]) 
+    ? mapaTipoConector[rawConector] 
+    : 'No indicado';
+
+  // Mapeo Tipo de Hidrante
+  const mapaTipoHidrante: Record<string | number, string> = {
+    1: 'Hidrante de columna',
+    2: 'Hidrante de arqueta',
+    3: 'Embalse'
+  };
+  const rawHidrante = propiedades.hydrant_type ?? propiedades.tipo_hidrante;
+  const tipoHidrante = (rawHidrante !== null && rawHidrante !== undefined && mapaTipoHidrante[rawHidrante]) 
+    ? mapaTipoHidrante[rawHidrante] 
+    : 'No indicado';
 
   // Lógica de foto con manejo de rutas flexible
   let fotoHtml = '';
   let pathPhoto: string = propiedades.path_photo || '';
-
   if (pathPhoto.trim() !== '') {
-    // Normalizar barras invertidas de Windows si las hubiera
     pathPhoto = pathPhoto.replace(/\\/g, '/');
-
-    // Obtener solo el nombre del archivo final
     const nombreArchivo = pathPhoto.split('/').pop();
-
     if (nombreArchivo && nombreArchivo.trim() !== '') {
       const src = `/assets/foto_hidrantes/${nombreArchivo}`;
       fotoHtml = `<img src="${src}" alt="Foto Hidrante ${id}" class="popup-img" onerror="this.style.display='none'" />`;
@@ -698,13 +788,15 @@ export class CapasDiputacion implements OnInit {
       <div class="popup-title">
         <span>🧯</span> <span>Hidrante #${id}</span>
       </div>
-
       ${fotoHtml}
-
       <div class="popup-info">
         <div class="popup-row">
           <span class="label">Tipo Conector</span>
           <span class="value badge">${tipoConector}</span>
+        </div>
+        <div class="popup-row">
+          <span class="label">Tipo Hidrante</span>
+          <span class="value badge">${tipoHidrante}</span>
         </div>
         <div class="popup-row">
           <span class="label">Coordenadas</span>
@@ -719,7 +811,6 @@ export class CapasDiputacion implements OnInit {
           <span class="value">${fecha}</span>
         </div>
       </div>
-
       ${urlMaps ? `
         <a href="${urlMaps}" target="_blank" rel="noopener noreferrer" class="popup-btn">
           <span>Ver en Google Maps</span> ↗
@@ -745,6 +836,7 @@ export class CapasDiputacion implements OnInit {
         <div class="popup-title">
           <span>🏭</span> <span>${nombre}</span>
         </div>
+
         <div class="popup-info">
           <div class="popup-row"><span class="label">Municipio</span><span class="value">${ttmm}</span></div>
           <div class="popup-row"><span class="label">Sector Principal</span><span class="value">${sector}</span></div>
@@ -752,6 +844,7 @@ export class CapasDiputacion implements OnInit {
           ${actividades ? `<div class="popup-row"><span class="label">Actividades</span><span class="value">${actividades}</span></div>` : ''}
           <div class="popup-row"><span class="label">Ind. Agrícola</span><span class="value badge">${esAgricola}</span></div>
         </div>
+
         <a href="${urlMaps}" target="_blank" rel="noopener" class="popup-btn">
           <span>Ver en Google Maps</span> ↗
         </a>
@@ -773,11 +866,13 @@ export class CapasDiputacion implements OnInit {
         <div class="popup-title">
           <span>⛽</span> <span>${nombre}</span>
         </div>
+
         <div class="popup-info">
           <div class="popup-row"><span class="label">Compañía</span><span class="value badge">${compania}</span></div>
           <div class="popup-row"><span class="label">Dirección</span><span class="value">${direccion}</span></div>
           <div class="popup-row"><span class="label">Horario</span><span class="value">${horario}</span></div>
         </div>
+
         <a href="${urlMaps}" target="_blank" rel="noopener" class="popup-btn">
           <span>Ver en Google Maps</span> ↗
         </a>
@@ -798,10 +893,12 @@ export class CapasDiputacion implements OnInit {
         <div class="popup-title">
           <span>👮</span> <span>Policía Local - ${ayto}</span>
         </div>
+
         <div class="popup-info">
           <div class="popup-row"><span class="label">Tipo</span><span class="value">${tipo}</span></div>
           <div class="popup-row"><span class="label">Provincia</span><span class="value">${provincia}</span></div>
         </div>
+
         <a href="${urlMaps}" target="_blank" rel="noopener" class="popup-btn">
           <span>Ver en Google Maps</span> ↗
         </a>
@@ -811,6 +908,7 @@ export class CapasDiputacion implements OnInit {
 
   datosRutasEscolares(propiedades: any): string {
     const nombre = propiedades?.['nombre'] ?? 'Ruta Escolar';
+
     return `
       <div class="popup-card">
         <div class="popup-title">🚌 <span>${nombre}</span></div>
@@ -823,17 +921,31 @@ export class CapasDiputacion implements OnInit {
     const tipo = propiedades?.['d_tipocent'] ?? 'N/D';
     const [lng, lat] = geometry?.coordinates ?? [0, 0];
     const urlMaps = `https://www.google.com/maps/place/${lat},${lng}`;
+
     return `
       <div class="popup-card">
         <div class="popup-title">🏥 <span>${nombre}</span></div>
+
         <div class="popup-info">
-          <div class="popup-row"><span class="label">Tipo Centro</span><span class="value badge">${tipo}</span></div>
+          <div class="popup-row">
+            <span class="label">Tipo Centro</span>
+            <span class="value badge">${tipo}</span>
+          </div>
         </div>
+
         <a href="${urlMaps}" target="_blank" rel="noopener" class="popup-btn">
           <span>Ver en Google Maps</span> ↗
         </a>
       </div>
     `;
   }
- 
+
+  toggleGrupoDiputacion(grupo: any): void {
+    const idGrupo = typeof grupo === 'object' ? grupo?.id : grupo;
+
+    if (idGrupo !== undefined) {
+      this.gruposAbiertos[idGrupo] = !this.gruposAbiertos[idGrupo];
+    }
+  }
 }
+
