@@ -31,11 +31,11 @@ export class CapasDiputacion implements OnInit {
 
   gruposAbiertos: { [id: number]: boolean } = { 1: true };
   modalClick$ = new Subject<string>();  // emite HTML cuando se pincha un punto
-  
+
   grupoDiputacion: Grupo[] = [];
   capas: Capa[] = [];
 
-  constructor(private capasService: CapasService) {}
+  constructor(private capasService: CapasService) { }
 
   async ngOnInit(): Promise<void> {
     // Funciona igual en Android (SQLite) y en Web (HTTP)
@@ -45,17 +45,17 @@ export class CapasDiputacion implements OnInit {
   async cargarCapasDiputacion(map: maplibregl.Map) {
     this.grupoDiputacion = await this.capasService.getGruposSeccion('diputacion');
 
-    if (this.capas.length == 0){
+    if (this.capas.length == 0) {
       for (const grupo of this.grupoDiputacion) {
         //this.capas.push(...await this.capasService.getCapasGrupo(grupo.id));
         const capas = await this.capasService.getCapasGrupo(grupo.id);
         this.capas.push(...capas);
       }
     }
-        
+
     //console.log("capas Diputacion", this.capas);
     //console.log("capas grupoDiputacion", this.grupoDiputacion);
-    
+
     for (const capa of this.capas) {
       await this.cargarCapaDiputacion(map, capa);
     }
@@ -118,8 +118,8 @@ export class CapasDiputacion implements OnInit {
     }
   }
   async cargarCapaPuntos(map: maplibregl.Map, urlGeoJSON: string, nombreSource: string, imagen: string, checked: boolean) {
-    console.log("URL capa puntos", urlGeoJSON, imagen);
-    console.log("Checked", checked);
+    //console.log("URL capa puntos", urlGeoJSON, imagen);
+    //console.log("Checked", checked);
     let nombreImagen = nombreSource;
     let nombreCapa = nombreSource;
     await this.cargarImagen(map, nombreImagen, imagen);
@@ -193,7 +193,7 @@ export class CapasDiputacion implements OnInit {
       } else if (nombreCapa == "PoliciaLocal") {
         contenido = this.datosPoliciaLocal(propiedades, feature?.geometry);
       }
-      
+
       if (contenido != '')
         this.modalClick$.next(contenido);
     });
@@ -430,7 +430,7 @@ export class CapasDiputacion implements OnInit {
         'text-halo-width': 2,
       }
     });
-    
+
   }
   async cargarCapaInterfazForestal(map: maplibregl.Map, urlGeoJSON: string, nombreSource: string, checked: boolean) {
     const respuesta = await fetch(urlGeoJSON);

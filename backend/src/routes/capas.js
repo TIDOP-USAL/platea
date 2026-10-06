@@ -350,11 +350,8 @@ router.post('/:id/geojson', upload.single('archivo'), async (req, res) => {
 
     await reemplazarContenidoCapa(req.params.id, features);
 
-    const { rows: capaActualizada } = await db.query(
-      'UPDATE capa SET actualizado_en = now() WHERE id = $1 RETURNING *',
-      [req.params.id]
-    );
-    res.json({ ok: true, capa: capaActualizada[0] });
+
+    res.json({ ok: true });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Error guardando GeoJSON' });

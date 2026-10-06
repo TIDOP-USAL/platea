@@ -102,6 +102,14 @@
     .alert.visible { display: block; }
     .alert-error { background: #450a0a; border: 1px solid #7f1d1d; color: #fca5a5; }
 
+    .form-group textarea { width: 100%; padding: 9px 12px; background: #0f172a; border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-family: Consolas, monospace; font-size: 12px; outline: none; resize: vertical; }
+    .form-group textarea:focus { border-color: var(--accent); }
+    .prop-row { display: grid; grid-template-columns: 1fr 1.6fr auto; gap: 6px; margin-bottom: 6px; }
+    .prop-row input { padding: 7px 10px; background: #0f172a; border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-size: 13px; outline: none; min-width: 0; }
+    .prop-row input:focus { border-color: var(--accent); }
+    details summary { cursor: pointer; font-size: 12px; color: var(--muted); margin: 8px 0; }
+    .pager { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.25rem; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+    .cell-trunc { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .empty-state { text-align: center; padding: 2.5rem; color: var(--muted); font-size: 13px; }
 
     .export-section {
@@ -159,6 +167,7 @@
     <a class="active" onclick="navigate('secciones', this)">📂 Secciones</a>
     <a onclick="navigate('grupos', this)">🗂️ Grupos</a>
     <a onclick="navigate('capas', this)">🗺️ Capas</a>
+    <a onclick="navigate('contenido', this)">✏️ Contenido de capas</a>
     <div class="section-label">Sistema</div>
     <a onclick="navigate('usuarios', this)">👤 Usuarios admin</a>
   </nav>
@@ -252,6 +261,47 @@
       </div>
     </div>
 
+    <!-- Contenido de capas (solo capas no WMS) -->
+    <div class="view" id="view-contenido">
+      <!-- Paso 1: listado de capas -->
+      <div class="card" id="contenidoListaCard">
+        <div class="card-header"><h3>Capas con contenido editable (no WMS)</h3></div>
+        <table>
+          <thead><tr><th>ID</th><th>Capa</th><th>Sección / Grupo</th><th>Tipo</th><th>Elementos</th><th>Última modificación</th><th>Acciones</th></tr></thead>
+          <tbody id="tbContenidoCapas"><tr><td colspan="7" class="empty-state">Cargando…</td></tr></tbody>
+        </table>
+      </div>
+
+      <!-- Paso 2: elementos de la capa seleccionada -->
+      <div class="card" id="contenidoFeaturesCard" style="display:none">
+        <div class="card-header">
+          <div class="btn-row">
+            <button class="btn btn-ghost btn-sm" onclick="volverListadoContenido()">← Capas</button>
+            <h3 id="contenidoTitulo">Contenido</h3>
+          </div>
+          <button class="btn btn-primary" onclick="nuevoFeature()">+ Nuevo elemento</button>
+        </div>
+        <div class="card-body" style="padding-bottom:0">
+          <div class="selector-row">
+            <input id="featBuscar" placeholder="Buscar en propiedades…" onkeydown="if(event.key==='Enter')buscarFeatures()"
+              style="padding:7px 10px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:13px;outline:none;min-width:240px">
+            <button class="btn btn-ghost btn-sm" onclick="buscarFeatures()">Buscar</button>
+          </div>
+        </div>
+        <table>
+          <thead id="thFeatures"></thead>
+          <tbody id="tbFeatures"></tbody>
+        </table>
+        <div class="pager">
+          <span id="featInfo"></span>
+          <div class="btn-row">
+            <button class="btn btn-ghost btn-sm" id="featPrev" onclick="cambiarPaginaFeatures(-1)">‹ Anterior</button>
+            <button class="btn btn-ghost btn-sm" id="featNext" onclick="cambiarPaginaFeatures(1)">Siguiente ›</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Usuarios -->
     <div class="view" id="view-usuarios">
       <div class="card">
@@ -332,6 +382,7 @@ const pageTitles = {
   secciones: ['Secciones', 'PlateaGIS / Capas / Secciones'],
   grupos:    ['Grupos',    'PlateaGIS / Capas / Grupos'],
   capas:     ['Capas',     'PlateaGIS / Capas / Capas'],
+  contenido: ['Contenido de capas', 'PlateaGIS / Capas / Contenido'],
   usuarios:  ['Usuarios admin', 'PlateaGIS / Sistema / Usuarios'],
 };
 
@@ -343,6 +394,7 @@ function navigate(view, el) {
   const [title, bc] = pageTitles[view] || [view, view];
   document.getElementById('pageTitle').textContent = title;
   document.getElementById('pageBreadcrumb').textContent = bc;
+  if (view === 'contenido') volverListadoContenido();
 }
 
 // ── Secciones ──
@@ -467,6 +519,157 @@ function renderCapas() {
   }).join('');
 }
 
+// ── Contenido de capas (features) ──
+let capasContenido = [], capaSel = null, featRows = [], featTotal = 0, featPage = 1, featQ = '', featGeomOriginal = '';
+const FEAT_LIMIT = 50;
+
+async function volverListadoContenido() {
+  capaSel = null;
+  document.getElementById('contenidoFeaturesCard').style.display = 'none';
+  document.getElementById('contenidoListaCard').style.display = '';
+  try {
+    capasContenido = await api('/admin/api/contenido/capas');
+    renderCapasContenido();
+  } catch (err) {
+    document.getElementById('tbContenidoCapas').innerHTML = `<tr><td colspan="7" class="empty-state">${esc(err.message)}</td></tr>`;
+  }
+}
+
+function renderCapasContenido() {
+  const tb = document.getElementById('tbContenidoCapas');
+  if (!capasContenido.length) { tb.innerHTML = '<tr><td colspan="7" class="empty-state">No hay capas con contenido propio (todas son WMS)</td></tr>'; return; }
+  tb.innerHTML = capasContenido.map(c => `<tr>
+    <td><span class="badge badge-gray">${c.id}</span></td>
+    <td><strong>${esc(c.texto)}</strong></td>
+    <td style="color:var(--muted)">${esc(c.seccion)} / ${esc(c.grupo)}</td>
+    <td><span class="badge badge-blue">${esc(c.tipo || '—')}</span></td>
+    <td><span class="badge badge-green">${c.n_features}</span></td>
+    <td style="color:var(--muted);font-size:12px">${c.ultima_actualizacion ? new Date(c.ultima_actualizacion).toLocaleString('es-ES') : '—'}</td>
+    <td><button class="btn btn-primary btn-sm" onclick="abrirContenido(${c.id})">Editar contenido</button></td>
+  </tr>`).join('');
+}
+
+function abrirContenido(id) {
+  capaSel = capasContenido.find(c => c.id === id);
+  featPage = 1; featQ = '';
+  document.getElementById('featBuscar').value = '';
+  document.getElementById('contenidoTitulo').textContent = capaSel.texto;
+  document.getElementById('contenidoListaCard').style.display = 'none';
+  document.getElementById('contenidoFeaturesCard').style.display = '';
+  loadFeatures();
+}
+
+async function loadFeatures() {
+  try {
+    const d = await api(`/admin/api/contenido/capas/${capaSel.id}/features?page=${featPage}&limit=${FEAT_LIMIT}&q=${encodeURIComponent(featQ)}`);
+    // Si se borró el último elemento de una página > 1, retrocede
+    if (!d.features.length && featPage > 1) { featPage--; return loadFeatures(); }
+    featRows = d.features; featTotal = d.total;
+    renderFeatures();
+  } catch (err) {
+    document.getElementById('tbFeatures').innerHTML = `<tr><td colspan="9" class="empty-state">${esc(err.message)}</td></tr>`;
+  }
+}
+
+function buscarFeatures() { featQ = document.getElementById('featBuscar').value.trim(); featPage = 1; loadFeatures(); }
+function cambiarPaginaFeatures(d) { featPage += d; loadFeatures(); }
+
+function celdaValor(v) {
+  if (v === null || v === undefined) return '';
+  return typeof v === 'object' ? JSON.stringify(v) : String(v);
+}
+
+function renderFeatures() {
+  const cols = [];
+  featRows.forEach(f => Object.keys(f.properties).forEach(k => { if (!cols.includes(k) && cols.length < 6) cols.push(k); }));
+  document.getElementById('thFeatures').innerHTML =
+    `<tr><th>ID</th><th>Geom.</th>${cols.map(k => `<th>${esc(k)}</th>`).join('')}<th>Acciones</th></tr>`;
+
+  const tb = document.getElementById('tbFeatures');
+  if (!featRows.length) {
+    tb.innerHTML = `<tr><td colspan="${cols.length + 3}" class="empty-state">Sin elementos</td></tr>`;
+  } else {
+    tb.innerHTML = featRows.map(f => `<tr>
+      <td><span class="badge badge-gray">${f.id}</span></td>
+      <td><span class="badge badge-blue">${esc(f.tipo_geometria || '—')}</span></td>
+      ${cols.map(k => `<td class="cell-trunc" title="${esc(celdaValor(f.properties[k]))}">${esc(celdaValor(f.properties[k]))}</td>`).join('')}
+      <td><div class="btn-row">
+        <button class="btn btn-ghost btn-sm" onclick="editFeature(${f.id})">Editar</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteFeature(${f.id})">Eliminar</button>
+      </div></td>
+    </tr>`).join('');
+  }
+
+  const desde = featTotal ? (featPage - 1) * FEAT_LIMIT + 1 : 0;
+  const hasta = Math.min(featPage * FEAT_LIMIT, featTotal);
+  document.getElementById('featInfo').textContent = `${desde}–${hasta} de ${featTotal}`;
+  document.getElementById('featPrev').disabled = featPage <= 1;
+  document.getElementById('featNext').disabled = hasta >= featTotal;
+}
+
+// Editor de propiedades (clave / valor). Se conserva el tipo original del valor.
+function propRowHTML(k = '', v = '') {
+  const tipo = v === null ? 'null' : typeof v === 'object' ? 'json' : (v === '' && k === '') ? 'new' : typeof v;
+  return `<div class="prop-row">
+    <input class="prop-k" placeholder="clave" value="${esc(k)}">
+    <input class="prop-v" placeholder="valor" data-type="${tipo}" value="${esc(celdaValor(v))}">
+    <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">✕</button>
+  </div>`;
+}
+
+function addPropRow() {
+  document.getElementById('propsEditor').insertAdjacentHTML('beforeend', propRowHTML());
+}
+
+function leerPropiedades() {
+  const props = {};
+  document.querySelectorAll('#propsEditor .prop-row').forEach(row => {
+    const k = row.querySelector('.prop-k').value.trim();
+    if (!k) return;
+    if (k in props) throw new Error(`Propiedad duplicada: "${k}"`);
+    const input = row.querySelector('.prop-v');
+    const raw = input.value, t = input.dataset.type;
+    if (t === 'json') {
+      try { props[k] = JSON.parse(raw); } catch { throw new Error(`Valor JSON no válido en "${k}"`); }
+    } else if (t === 'number' && raw.trim() !== '' && !isNaN(Number(raw))) props[k] = Number(raw);
+    else if (t === 'boolean' && (raw === 'true' || raw === 'false')) props[k] = raw === 'true';
+    else if (t === 'null' && raw === '') props[k] = null;
+    else props[k] = raw;
+  });
+  return props;
+}
+
+function nuevoFeature() { featGeomOriginal = ''; openModal('feature', null); }
+
+async function editFeature(id) {
+  try {
+    const f = await api(`/admin/api/contenido/features/${id}`);
+    featGeomOriginal = f.geometry ? JSON.stringify(f.geometry) : '';
+    openModal('feature', f);
+  } catch (err) { alert('Error al cargar el elemento: ' + err.message); }
+}
+
+async function saveFeature() {
+  const properties = leerPropiedades();
+  const geomTxt = document.getElementById('fGeometry').value.trim();
+  const body = { properties };
+
+  if (geomTxt && geomTxt !== featGeomOriginal) {   // solo se envía si cambió
+    try { body.geometry = JSON.parse(geomTxt); } catch { throw new Error('La geometría no es un JSON válido'); }
+  }
+  if (!editId && !body.geometry) throw new Error('La geometría es obligatoria');
+
+  return editId
+    ? api(`/admin/api/contenido/features/${editId}`, 'PATCH', body)
+    : api(`/admin/api/contenido/capas/${capaSel.id}/features`, 'POST', body);
+}
+
+async function deleteFeature(id) {
+  if (!confirm('¿Eliminar este elemento de la capa?')) return;
+  try { await api(`/admin/api/contenido/features/${id}`, 'DELETE'); await loadFeatures(); }
+  catch (err) { alert('Error al eliminar: ' + err.message); }
+}
+
 // ── Usuarios ──
 async function loadUsuarios() {
   usuarios = await api('/admin/api/users');
@@ -494,7 +697,9 @@ function openModal(type, data = null) {
   modalType = type; editId = data?.id || null;
   document.getElementById('modalAlert').classList.remove('visible');
   const titles = { seccion:'Sección', grupo:'Grupo', capa:'Capa', usuario:'Usuario' };
-  document.getElementById('modalTitle').textContent = (editId ? 'Editar ' : 'Nueva ') + titles[type];
+  document.getElementById('modalTitle').textContent = type === 'feature'
+    ? (editId ? 'Editar elemento' : 'Nuevo elemento')
+    : (editId ? 'Editar ' : 'Nueva ') + titles[type];
 
   const bodies = {
     seccion: `
@@ -555,6 +760,17 @@ function openModal(type, data = null) {
           <option value="false" ${!data?.checked?'selected':''}>No</option>
         </select></div>`,
 
+    feature: `
+      <div class="form-group">
+        <label>Propiedades</label>
+        <div id="propsEditor">${Object.entries(data?.properties || {}).map(([k, v]) => propRowHTML(k, v)).join('')}</div>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="addPropRow()">+ Añadir propiedad</button>
+      </div>
+      <details ${editId ? '' : 'open'}>
+        <summary>Geometría (GeoJSON${editId ? ', avanzado' : ' *'})</summary>
+        <div class="form-group"><textarea id="fGeometry" rows="8" spellcheck="false">${esc(data?.geometry ? JSON.stringify(data.geometry) : '')}</textarea></div>
+      </details>`,
+
     usuario: `
       <div class="form-group"><label>Nombre completo</label><input id="fNombreUser" value="${esc(data?.nombre||'')}"></div>
       ${!editId ? `<div class="form-group"><label>Usuario *</label><input id="fUsername"></div>` : ''}
@@ -577,6 +793,12 @@ function showModalError(msg) { const el = document.getElementById('modalAlert');
 async function saveModal() {
   document.getElementById('modalAlert').classList.remove('visible');
   try {
+    if (modalType === 'feature') {
+      await saveFeature();
+      closeModal();
+      await loadFeatures();
+      return;
+    }
     if (modalType === 'seccion')  await saveSeccion();
     else if (modalType === 'grupo')    await saveGrupo();
     else if (modalType === 'capa')     await saveCapa();
