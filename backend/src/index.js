@@ -43,7 +43,7 @@ app.use(express.json());
 
 
 
-app.use('/uploads/capas', express.static(
+app.use('/uploads/capas', cors(), express.static(
   path.join(__dirname, '..', 'uploads', 'capas')
 ));
 

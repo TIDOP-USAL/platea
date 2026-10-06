@@ -17,6 +17,7 @@ import { firstValueFrom } from 'rxjs';
 import { CapasBaseService } from './capas-base.service';
 import { Capa, GrupoConCapas, SeccionTipo, Grupo } from '../models/capas.model';
 import { environment } from '../environments/environment';
+import { cargarFotosLocales, fotoLocalExiste, guardarFotoLocal, nombreFotoHidrante } from './foto-hidrante';
 
 // ── Capas que SIEMPRE se descargan/actualizan si hay cambios ───────────────
 // (las necesita la generación de emergencias). Se identifican por nombre_source.
@@ -119,6 +120,7 @@ export class CapasSqliteService extends CapasBaseService {
     this.db = await this.sqlite.createConnection('plateagis', false, 'no-encryption', 1, false);
     await this.db.open();
     await this.crearTablas();
+    await cargarFotosLocales();
     // Ya no se importa nada al arrancar: la app empieza vacía.
   }
 
@@ -225,6 +227,10 @@ export class CapasSqliteService extends CapasBaseService {
     }
 
     const eliminadasEnServidor = [...locales.keys()].filter(id => !idsCatalogo.has(id));
+
+    // Fotos de elementos que falten en el dispositivo (también en capas "al día")
+    void this.sincronizarFotos();
+
     return { items, eliminadasEnServidor };
   }
 
@@ -332,6 +338,7 @@ export class CapasSqliteService extends CapasBaseService {
       progreso('contenido', 0);
       const generadoEn = await this.descargarContenido(capa.id, since, n => progreso('contenido', n));
       await this.db.run('UPDATE capa SET ultima_actualizacion = ? WHERE id = ?;', [generadoEn, capa.id]);
+      await this.sincronizarFotos(capa.id);
     }
   }
 
@@ -382,6 +389,53 @@ export class CapasSqliteService extends CapasBaseService {
         }
     );
     await this.db.executeSet(set, true); // una transacción por página
+  }
+
+  // ── Fotos de elementos (path_photo) ──────────────────────────────────────
+  // Las fotos nuevas se suben desde el panel admin y están en el backend
+  // (/uploads/capas/<path_photo>). Aquí se bajan al dispositivo para verlas
+  // offline. Es idempotente: salta las que ya están y reintenta las que
+  // fallaron (sin red, etc.) en la siguiente actualización. Nunca falla.
+  // Se serializa en una cola para que dos llamadas no bajen la misma foto a la vez.
+  private colaFotos: Promise<void> = Promise.resolve();
+
+  private sincronizarFotos(capaId?: number): Promise<void> {
+    this.colaFotos = this.colaFotos.then(() => this.descargarFotosPendientes(capaId));
+    return this.colaFotos;
+  }
+
+  private async descargarFotosPendientes(capaId?: number): Promise<void> {
+    try {
+      const { values } = capaId === undefined
+        ? await this.db.query('SELECT properties FROM contenido_capas WHERE properties LIKE ?;', ['%path_photo%'])
+        : await this.db.query('SELECT properties FROM contenido_capas WHERE capa_id = ? AND properties LIKE ?;', [capaId, '%path_photo%']);
+      const origen = new URL(this.api).origin;
+      let pendientes = 0, descargadas = 0;
+      const vistas = new Set<string>();   // varias filas pueden compartir foto
+
+      for (const v of values ?? []) {
+        let pathPhoto: unknown;
+        try { pathPhoto = JSON.parse(v.properties)?.path_photo; } catch { continue; }
+
+        const nombre = nombreFotoHidrante(pathPhoto);
+        if (!nombre || vistas.has(nombre) || fotoLocalExiste(nombre)) continue;
+        vistas.add(nombre);
+        pendientes++;
+
+        try {
+          const respuesta = await fetch(`${origen}/uploads/capas/${pathPhoto}`);
+          if (!respuesta.ok) { console.warn('[Fotos] HTTP', respuesta.status, nombre); continue; }
+          await guardarFotoLocal(nombre, await this.blobABase64(await respuesta.blob()));
+          descargadas++;
+        } catch (err) {
+          console.warn('[Fotos] No se pudo descargar', nombre, err);
+        }
+      }
+      if (pendientes) console.log(`[Fotos] ${descargadas}/${pendientes} fotos descargadas`);
+      if (descargadas) await cargarFotosLocales();
+    } catch (err) {
+      console.warn('[Fotos] Error sincronizando fotos', err);
+    }
   }
 
   // ── Eliminar una capa del dispositivo ────────────────────────────────────

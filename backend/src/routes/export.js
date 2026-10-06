@@ -110,12 +110,35 @@ router.get('/android', async (req, res) => {
       }
     }
 
+    // Fotos de elementos (path_photo) subidas desde el panel: se empaquetan en
+    // uploads/<path_photo> para que la app las tenga offline. Las fotos antiguas
+    // (que no están en el servidor) simplemente se ignoran.
+    const PREFIJO_FOTOS = 'PLATEA-GIS/foto_hidrantes/';
+    const DIR_FOTOS = path.resolve(UPLOADS_DIR, PREFIJO_FOTOS);
+    let fotosIncluidas = 0;
+    for (const fila of data.contenido_capas) {
+      if (fila.deleted || !fila.properties) continue;
+      let pp;
+      try {
+        const props = typeof fila.properties === 'string' ? JSON.parse(fila.properties) : fila.properties;
+        pp = props && props.path_photo;
+      } catch { continue; }
+      if (typeof pp !== 'string' || !pp.startsWith(PREFIJO_FOTOS)) continue;
+
+      const abs = path.resolve(UPLOADS_DIR, pp);
+      if (!abs.startsWith(DIR_FOTOS + path.sep)) continue;      // evita rutas con ..
+      const entrada = `uploads/${pp}`;
+      if (zip.getEntry(entrada) || !fs.existsSync(abs)) continue;
+      zip.addLocalFile(abs, path.posix.dirname(entrada));
+      fotosIncluidas++;
+    }
+
     if (noEncontrados.length > 0) {
       console.warn('[export] Archivos no encontrados en disco:', noEncontrados);
     }
     console.log(
       `[export] ZIP generado (${modo}${since ? ' desde ' + since.toISOString() : ''}): ` +
-      `${data.contenido_capas.length} filas de contenido, ${incluidos} imágenes incluidas.`
+      `${data.contenido_capas.length} filas de contenido, ${incluidos} imágenes y ${fotosIncluidas} fotos incluidas.`
     );
 
     // Registrar el export SOLO si todo lo anterior fue bien (antes de mandar la respuesta,

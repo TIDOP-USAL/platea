@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Component, OnInit } from '@angular/core';
 import { Subject } from 'rxjs';
 import { CapasService } from './capas.service';
+import { urlFotoHidrante } from './foto-hidrante';
 import { Grupo, Capa } from '../models/capas.model';
 
 @Injectable({
@@ -686,7 +687,7 @@ export class CapasDiputacion implements OnInit {
     contenido += "<b>Fecha:</b> " + propiedades?.['date'] + "<br>";
     let pathPhoto = propiedades?.['path_photo'];
     if (pathPhoto && pathPhoto.split('foto_hidrantes/')[1]?.trim() !== '') {
-      contenido += "<b>Foto:</b>  <img src='" + pathPhoto.replace('PLATEA-GIS/foto_hidrantes/', '/assets/foto_hidrantes/') + "'><br>";
+      contenido += "<b>Foto:</b>  <img src='" + urlFotoHidrante(pathPhoto) + "'><br>";
     }
     contenido += "<b>URL Google Maps:</b> <a href='" + propiedades?.['url_google_maps'] + "' target='_blank'>Enlace</a><br>";
     return contenido;

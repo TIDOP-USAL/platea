@@ -3,6 +3,9 @@
 // Se monta en /admin/api/contenido (ver index.js).
 
 const express = require('express');
+const multer  = require('multer');
+const path    = require('path');
+const fs      = require('fs');
 const pool    = require('../db');
 const { requireAuth } = require('../middleware/auth');
 
@@ -12,6 +15,24 @@ router.use(requireAuth);
 // Capa "no WMS": sin capa_wms y con tipo distinto de wms/wmts
 const NO_WMS = `(c.capa_wms IS NULL OR c.capa_wms = '')
                 AND COALESCE(c.tipo, '') NOT IN ('wms', 'wmts')`;
+
+// ─── Subida de fotos (campo path_photo de hidrantes) ────────────────────────
+// Se guardan en <UPLOADS_DIR>/PLATEA-GIS/foto_hidrantes, servido en /uploads/capas/PLATEA-GIS/foto_hidrantes/...
+const UPLOADS_DIR = process.env.UPLOADS_DIR || '/app/uploads/capas';
+// Mismo formato de ruta que ya usan los hidrantes: "PLATEA-GIS/foto_hidrantes/010_001.jpeg"
+const PREFIJO_FOTOS = 'PLATEA-GIS/foto_hidrantes/';
+const FOTOS_DIR   = path.join(UPLOADS_DIR, 'PLATEA-GIS', 'foto_hidrantes');
+if (!fs.existsSync(FOTOS_DIR)) fs.mkdirSync(FOTOS_DIR, { recursive: true });
+
+const uploadFoto = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 15 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (['.jpg', '.jpeg', '.png', '.webp'].includes(ext)) return cb(null, true);
+    cb(new Error(`Tipo de imagen no permitido: ${ext || '(sin extensión)'}`));
+  },
+});
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -162,7 +183,6 @@ router.post('/capas/:id/features', async (req, res) => {
         properties ? JSON.stringify(properties) : null,
       ]
     );
-
     res.status(201).json(filaAFeature(rows[0]));
   } catch (err) {
     const status = /geometr|GeometryCollection|coordinates/i.test(err.message) ? 400 : 500;
@@ -201,7 +221,6 @@ router.patch('/features/:id', async (req, res) => {
     );
     if (!rows[0]) return res.status(404).json({ error: 'No encontrado' });
 
-
     res.json(filaAFeature(rows[0]));
   } catch (err) {
     const status = /geometr|GeometryCollection|coordinates/i.test(err.message) ? 400 : 500;
@@ -218,7 +237,52 @@ router.delete('/features/:id', async (req, res) => {
       [req.params.id]
     );
     if (!rows[0]) return res.status(404).json({ error: 'No encontrado' });
+    res.json({ ok: true });
+  } catch (err) { res.status(500).json({ error: err.message }); }
+});
 
+// ─── POST /fotos — sube una foto y devuelve la ruta para guardar en path_photo ─
+// multipart/form-data, campo "foto". No modifica ninguna feature: el panel pone
+// la ruta devuelta en el campo path_photo y se guarda con el PATCH/POST normal.
+router.post('/fotos', (req, res) => {
+  uploadFoto.single('foto')(req, res, (err) => {
+    if (err) return res.status(400).json({ error: err.message });
+    if (!req.file) return res.status(400).json({ error: 'Falta el archivo (campo "foto")' });
+
+    const ext  = path.extname(req.file.originalname).toLowerCase();
+    const base = path.basename(req.file.originalname, path.extname(req.file.originalname))
+      .replace(/[^A-Za-z0-9_-]+/g, '_').slice(0, 60) || 'foto';
+    const filename = `${Date.now()}_${base}${ext}`;   // evita sobrescribir fotos existentes
+
+    try {
+      fs.writeFileSync(path.join(FOTOS_DIR, filename), req.file.buffer);
+    } catch (e) {
+      return res.status(500).json({ error: 'No se pudo guardar la foto: ' + e.message });
+    }
+
+    res.status(201).json({ filename, path: PREFIJO_FOTOS + filename });
+  });
+});
+
+// ─── DELETE /fotos — borra una foto subida y aún sin usar (al cancelar el modal) ─
+// Solo borra ficheros de la carpeta de fotos que NO estén referenciados por ningún
+// elemento, así que no puede eliminar fotos en uso.
+router.delete('/fotos', async (req, res) => {
+  try {
+    const rel = req.body && req.body.path;
+    if (typeof rel !== 'string' || !rel.startsWith(PREFIJO_FOTOS)) {
+      return res.status(400).json({ error: 'Ruta no válida' });
+    }
+    const abs = path.resolve(UPLOADS_DIR, rel);
+    if (!abs.startsWith(FOTOS_DIR + path.sep)) {
+      return res.status(400).json({ error: 'Ruta no válida' });
+    }
+    const { rows } = await pool.query(
+      'SELECT 1 FROM contenido_capas WHERE strpos(properties, $1) > 0 LIMIT 1', [rel]
+    );
+    if (rows[0]) return res.status(409).json({ error: 'La foto está en uso' });
+
+    fs.unlink(abs, () => {});
     res.json({ ok: true });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });

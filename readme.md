@@ -52,7 +52,7 @@ password: webgis#2026
 Para subirlo a internet en vez de subir todos los archivos y meterlo en un Docker podemos crear una imagen y subir solo la imagen y despues borramos esa imagen del servidor, lo primero es hacer un build
 
 ```
-doker compose build frontend
+docker compose build frontend
 docker compose build backend
 ```
 

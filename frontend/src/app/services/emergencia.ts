@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
 import { CapasService } from './capas.service';
+import { urlFotoHidrante } from './foto-hidrante';
 
 // nombre_source de las capas de Diputación que usa la generación de emergencias
 const SOURCE_PARQUES = 'ParquesExtincionSalvamento';
@@ -510,7 +511,7 @@ export class EmergenciaService {
       `;
       const pathPhoto = p.path_photo;
       if (pathPhoto && pathPhoto.split('foto_hidrantes/')[1]?.trim() !== '') {
-        const src = pathPhoto.replace('PLATEA-GIS/foto_hidrantes/', '/assets/foto_hidrantes/');
+        const src = urlFotoHidrante(pathPhoto);
         html += `<b>Foto:</b><br><img src="${src}" style="max-width:200px; margin-top:4px;"><br>`;
       }
 

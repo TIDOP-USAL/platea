@@ -623,6 +623,10 @@ function addPropRow() {
 
 function leerPropiedades() {
   const props = {};
+  if (esCapaHidrantes()) {
+    const foto = document.getElementById('fPathPhoto').value.trim();
+    if (foto) props[CAMPO_FOTO] = foto;
+  }
   document.querySelectorAll('#propsEditor .prop-row').forEach(row => {
     const k = row.querySelector('.prop-k').value.trim();
     if (!k) return;
@@ -639,11 +643,61 @@ function leerPropiedades() {
   return props;
 }
 
-function nuevoFeature() { featGeomOriginal = ''; openModal('feature', null); }
+// Capa de hidrantes: el campo path_photo se edita con subida de archivo
+const CAMPO_FOTO = 'path_photo';
+function esCapaHidrantes() { return !!capaSel && /hidrante/i.test(capaSel.texto || ''); }
+
+function fotoSrc(v) {
+  if (!v) return '';
+  return /^(https?:)?\/\//.test(v) || v.startsWith('/') ? v : '/uploads/capas/' + v;
+}
+
+// Foto subida en el modal abierto y aún no guardada: se borra si se cancela
+let fotoSubida = null;
+async function borrarFotoSubida() {
+  if (!fotoSubida) return;
+  const ruta = fotoSubida; fotoSubida = null;
+  try { await api('/admin/api/contenido/fotos', 'DELETE', { path: ruta }); } catch (e) { /* huérfana: no bloquea */ }
+}
+
+function actualizarPreviewFoto() {
+  const img = document.getElementById('fFotoPreview');
+  const v = document.getElementById('fPathPhoto').value.trim();
+  if (!v) { img.style.display = 'none'; return; }
+  img.onerror = () => { img.style.display = 'none'; };
+  img.onload  = () => { img.style.display = ''; };
+  img.src = fotoSrc(v);
+}
+
+async function subirFoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const estado = document.getElementById('fFotoEstado');
+  estado.textContent = 'Subiendo…';
+  try {
+    await borrarFotoSubida();   // si ya se había subido otra en este modal, se descarta
+    const fd = new FormData();
+    fd.append('foto', file);
+    const res = await fetch('/admin/api/contenido/fotos', { method: 'POST', body: fd });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(d.error || res.statusText);
+    fotoSubida = d.path;
+    document.getElementById('fPathPhoto').value = d.path;
+    actualizarPreviewFoto();
+    estado.textContent = 'Subida. Guarda el elemento para aplicar el cambio.';
+  } catch (err) {
+    estado.textContent = '';
+    alert('Error al subir la foto: ' + err.message);
+  }
+  input.value = '';
+}
+
+function nuevoFeature() { fotoSubida = null; featGeomOriginal = ''; openModal('feature', null); }
 
 async function editFeature(id) {
   try {
     const f = await api(`/admin/api/contenido/features/${id}`);
+    fotoSubida = null;
     featGeomOriginal = f.geometry ? JSON.stringify(f.geometry) : '';
     openModal('feature', f);
   } catch (err) { alert('Error al cargar el elemento: ' + err.message); }
@@ -659,9 +713,14 @@ async function saveFeature() {
   }
   if (!editId && !body.geometry) throw new Error('La geometría es obligatoria');
 
-  return editId
-    ? api(`/admin/api/contenido/features/${editId}`, 'PATCH', body)
-    : api(`/admin/api/contenido/capas/${capaSel.id}/features`, 'POST', body);
+  const r = editId
+    ? await api(`/admin/api/contenido/features/${editId}`, 'PATCH', body)
+    : await api(`/admin/api/contenido/capas/${capaSel.id}/features`, 'POST', body);
+
+  // Guardado correcto: la foto subida se conserva solo si es la que quedó en path_photo
+  if (fotoSubida && fotoSubida !== properties[CAMPO_FOTO]) await borrarFotoSubida();
+  fotoSubida = null;
+  return r;
 }
 
 async function deleteFeature(id) {
@@ -761,9 +820,19 @@ function openModal(type, data = null) {
         </select></div>`,
 
     feature: `
+      ${esCapaHidrantes() ? `
+      <div class="form-group">
+        <label>Foto (${CAMPO_FOTO})</label>
+        <input id="fPathPhoto" value="${esc(data?.properties?.[CAMPO_FOTO] || '')}" placeholder="Ruta de la foto" oninput="actualizarPreviewFoto()">
+        <div style="margin-top:6px;display:flex;align-items:center;gap:10px">
+          <input type="file" id="fFotoFile" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" onchange="subirFoto(this)" style="font-size:12px">
+          <span id="fFotoEstado" style="font-size:11px;color:var(--muted)"></span>
+        </div>
+        <img id="fFotoPreview" style="display:none;margin-top:8px;max-width:100%;max-height:180px;border-radius:6px">
+      </div>` : ''}
       <div class="form-group">
         <label>Propiedades</label>
-        <div id="propsEditor">${Object.entries(data?.properties || {}).map(([k, v]) => propRowHTML(k, v)).join('')}</div>
+        <div id="propsEditor">${Object.entries(data?.properties || {}).filter(([k]) => !(esCapaHidrantes() && k === CAMPO_FOTO)).map(([k, v]) => propRowHTML(k, v)).join('')}</div>
         <button type="button" class="btn btn-ghost btn-sm" onclick="addPropRow()">+ Añadir propiedad</button>
       </div>
       <details ${editId ? '' : 'open'}>
@@ -783,10 +852,14 @@ function openModal(type, data = null) {
   };
 
   document.getElementById('modalBody').innerHTML = bodies[type];
+  if (type === 'feature' && esCapaHidrantes()) actualizarPreviewFoto();
   document.getElementById('modalOverlay').classList.add('open');
 }
 
-function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); modalType = null; editId = null; }
+function closeModal() {
+  if (modalType === 'feature') borrarFotoSubida();   // cancelar: descarta la foto subida sin guardar
+  document.getElementById('modalOverlay').classList.remove('open'); modalType = null; editId = null;
+}
 function closeModalOutside(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
 function showModalError(msg) { const el = document.getElementById('modalAlert'); el.textContent = msg; el.classList.add('visible'); }
 
