@@ -796,7 +796,7 @@ export class CapasDiputacion implements OnInit {
     return `
       <div class="popup-card">
         <div class="popup-title">
-          <span>Police Icon 👮</span> <span>Policía Local - ${ayto}</span>
+          <span>👮</span> <span>Policía Local - ${ayto}</span>
         </div>
         <div class="popup-info">
           <div class="popup-row"><span class="label">Tipo</span><span class="value">${tipo}</span></div>
