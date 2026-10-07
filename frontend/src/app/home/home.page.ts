@@ -143,10 +143,10 @@ export class HomePage implements OnInit {
    * Abre o cierra el modal que muestra la informacion del punto pinchado
    * @param isOpen true para abrir el modal, false para cerrar el modal
    */
-  setOpen(isOpen: boolean) {
-    this.isModalOpen = isOpen;
-  }
-
+ setOpen(isOpen: boolean) {
+  console.log('Cambiando estado del modal a:', isOpen);
+  this.isModalOpen = isOpen;
+}
   /**
    * Carga una capa en el mapa cuando se marca una capa en el checkbox
    * @param capa La capa que se va a cargar

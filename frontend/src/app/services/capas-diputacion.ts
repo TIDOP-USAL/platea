@@ -33,6 +33,7 @@ export class CapasDiputacion implements OnInit {
   gruposAbiertos: { [id: number]: boolean } = { 1: true };
   modalClick$ = new Subject<string>();  // emite HTML cuando se pincha un punto
 
+
   grupoDiputacion: Grupo[] = [];
   capas: Capa[] = [];
 
@@ -61,6 +62,7 @@ export class CapasDiputacion implements OnInit {
       await this.cargarCapaDiputacion(map, capa);
     }
   }
+
   getCapaPorSource(source: string): Capa | undefined {
     return this.capas.find(c => c.nombre_source === source);
   }
@@ -87,15 +89,18 @@ export class CapasDiputacion implements OnInit {
       await this.cargarCapaLinea(map, capa.url_json, capa.nombre_source, capa.checked, capa.color!, parseFloat(capa.grosor!));
     }
   }
-  /**Funciones para cargar las capas que pueden relleno, puntos o lineas**/
+
+  /**Funciones para cargar las capas que pueden relleno, puntos o lineas*/
   async cargarCapaRelleno(map: maplibregl.Map, urlGeoJSON: string, nombreSource: string, checked: boolean, color: string,) {
     let nombreCapa = nombreSource;
     const respuesta = await fetch(urlGeoJSON);
     const datosJson = await respuesta.json();
+
     map.addSource(nombreSource, {
       'type': 'geojson',
       'data': datosJson,
     });
+
     map?.addLayer({
       'id': nombreCapa,
       'type': 'fill',
@@ -108,8 +113,8 @@ export class CapasDiputacion implements OnInit {
         'fill-opacity': 0.3,
       }
     });
-
   }
+
   async cargarImagen(map: maplibregl.Map, nombreImagen: string, imagen: string) {
     if (!map?.hasImage(nombreImagen)) {
       const imageResponse = await map?.loadImage(imagen);
@@ -118,18 +123,23 @@ export class CapasDiputacion implements OnInit {
       }
     }
   }
+
   async cargarCapaPuntos(map: maplibregl.Map, urlGeoJSON: string, nombreSource: string, imagen: string, checked: boolean) {
     //console.log("URL capa puntos", urlGeoJSON, imagen);
     //console.log("Checked", checked);
     let nombreImagen = nombreSource;
     let nombreCapa = nombreSource;
+
     await this.cargarImagen(map, nombreImagen, imagen);
+
     const respuesta = await fetch(urlGeoJSON);
     const datosJson = await respuesta.json();
+
     map?.addSource(nombreSource, {
       'type': 'geojson',
       'data': datosJson,
     });
+
     map?.addLayer({
       'id': nombreCapa,
       'type': 'symbol',
@@ -142,7 +152,9 @@ export class CapasDiputacion implements OnInit {
         'icon-ignore-placement': true,
       }
     });
+
     let nombreEtiqueta = '';
+
     if (nombreSource == "Hidrantes") {
       nombreEtiqueta = "id";
     } else if (nombreSource == "InventarioRecursos") {
@@ -154,6 +166,7 @@ export class CapasDiputacion implements OnInit {
     } else if (nombreSource == "PoliciaLocal") {
       nombreEtiqueta = "ayto";
     }
+
     map?.addLayer({
       id: nombreSource + '_label',
       type: 'symbol',
@@ -175,7 +188,6 @@ export class CapasDiputacion implements OnInit {
         'text-halo-width': 2,
       }
     });
-
 
     map?.on('click', nombreCapa, (e) => {
       //Cargar en el modal la informacion del punto pinchado
@@ -199,14 +211,17 @@ export class CapasDiputacion implements OnInit {
         this.modalClick$.next(contenido);
     });
   }
+
   async cargarCapaLinea(map: maplibregl.Map, urlGeoJSON: string, nombreSource: string, checked: boolean, color: string, grosor: number) {
     let nombreCapa = nombreSource;
     const respuesta = await fetch(urlGeoJSON);
     const datosJson = await respuesta.json();
+
     map?.addSource(nombreSource, {
       'type': 'geojson',
       'data': datosJson,
     });
+
     map?.addLayer({
       'id': nombreSource,
       'type': 'line',
@@ -225,23 +240,28 @@ export class CapasDiputacion implements OnInit {
     map?.on('click', nombreCapa, (e) => {
       //Cargar en el modal la informacion del punto pinchado
       let contenido = '';
+
       for (const elemento of e.features!) {
         const propiedades = elemento.properties;
         contenido += this.datosRutasEscolares(propiedades);
       }
+
       this.modalClick$.next(contenido);
     });
   }
-  async cargarCapaTerminosMunicipales(map: maplibregl.Map, urlGeoJSON: string, nombreSource: string, checked: boolean, color: string,) {
 
+  async cargarCapaTerminosMunicipales(map: maplibregl.Map, urlGeoJSON: string, nombreSource: string, checked: boolean, color: string,) {
     let nombreCapa = nombreSource;
     const respuesta = await fetch(urlGeoJSON);
     const datosJson = await respuesta.json();
+
     console.log('Propiedades:', datosJson.features[0].properties);
+
     map.addSource(nombreSource, {
       'type': 'geojson',
       'data': datosJson,
     });
+
     map?.addLayer({
       'id': nombreCapa,
       'type': 'line',
@@ -256,6 +276,7 @@ export class CapasDiputacion implements OnInit {
         'line-width': 2
       }
     });
+
     map?.addLayer({
       id: nombreSource + '_label',
       type: 'symbol',
@@ -265,7 +286,6 @@ export class CapasDiputacion implements OnInit {
         'text-field': ['get', 'NAMEUNIT'],
         'text-size': 10,
         'text-max-width': 10,
-
         'text-allow-overlap': false,
         'text-ignore-placement': false,
         'text-optional': true,
@@ -276,6 +296,7 @@ export class CapasDiputacion implements OnInit {
         'text-halo-width': 2,
       }
     });
+
     map?.addLayer({
       'id': nombreCapa + "_fill",
       'type': 'fill',
@@ -288,8 +309,9 @@ export class CapasDiputacion implements OnInit {
         'fill-opacity': 0.3,
       }
     });
+
     map?.on('click', nombreCapa + "_fill", (e) => {
-      console.log("click")
+      console.log("click");
       //Cargar en el modal la informacion del punto pinchado
       const propiedades = e.features?.[0].properties;
       let contenido = '';
@@ -301,6 +323,7 @@ export class CapasDiputacion implements OnInit {
   async cargarCapaPuntosCentrosSalud(map: maplibregl.Map, urlGeoJSON: string, nombreSource: string, checked: boolean) {
 
     let nombreCapa = nombreSource;
+
     const iconos = [
       { id: 'icono-hospital', url: '/assets/capas/icons/hospital.png' },
       { id: 'icono-centro-guardia', url: '/assets/capas/icons/centro-guardia.png' },
@@ -308,15 +331,19 @@ export class CapasDiputacion implements OnInit {
       { id: 'icono-centro-salud', url: '/assets/capas/icons/centro-salud.png' },
       { id: 'icono-atencion-continuada', url: '/assets/capas/icons/puntos-atencion-continuada.png' },
     ];
+
     for (const icono of iconos) {
       await this.cargarImagen(map, icono.id, icono.url);
     }
+
     const respuesta = await fetch(urlGeoJSON);
     const datosJson = await respuesta.json();
+
     map?.addSource(nombreSource, {
       'type': 'geojson',
       'data': datosJson,
     });
+
     map?.addLayer({
       'id': nombreCapa,
       'type': 'symbol',
@@ -336,8 +363,8 @@ export class CapasDiputacion implements OnInit {
         'icon-allow-overlap': true,
         'icon-ignore-placement': true,
       },
-
     });
+
     map?.addLayer({
       id: nombreSource + '_label',
       type: 'symbol',
@@ -363,16 +390,21 @@ export class CapasDiputacion implements OnInit {
     map?.on('click', nombreCapa, (e) => {
       //Cargar en el modal la informacion del punto pinchado
       let contenido = '';
+
       for (const elemento of e.features!) {
         const propiedades = elemento.properties;
-        contenido += this.datosCentrosSalud(propiedades);
+        const geometry = elemento.geometry;
+        contenido += this.datosCentrosSalud(propiedades, geometry);
       }
+
       this.modalClick$.next(contenido);
     });
   }
+
   async cargarCapaPuntosParquesExtincionSalvamento(map: maplibregl.Map, urlGeoJSON: string, nombreSource: string, checked: boolean) {
     const respuesta = await fetch(urlGeoJSON);
     const datosJson = await respuesta.json();
+
     const iconos = [
       { id: 'icono-bomberos1', url: '/assets/capas/icons/bomberos-tipo1.png' },
       { id: 'icono-bomberos2', url: '/assets/capas/icons/bomberos-tipo2.png' },
@@ -385,10 +417,12 @@ export class CapasDiputacion implements OnInit {
     for (const icono of iconos) {
       await this.cargarImagen(map, icono.id, icono.url);
     }
+
     map?.addSource(nombreSource, {
       'type': 'geojson',
       'data': datosJson,
     });
+
     map?.addLayer({
       'id': nombreSource,
       'type': 'symbol',
@@ -410,6 +444,7 @@ export class CapasDiputacion implements OnInit {
         'icon-ignore-placement': true,
       }
     });
+
     map?.addLayer({
       id: nombreSource + '_label',
       type: 'symbol',
@@ -433,14 +468,17 @@ export class CapasDiputacion implements OnInit {
     });
 
   }
+
   async cargarCapaInterfazForestal(map: maplibregl.Map, urlGeoJSON: string, nombreSource: string, checked: boolean) {
     const respuesta = await fetch(urlGeoJSON);
     const data = await respuesta.json();
+
     map?.addSource(nombreSource, {
       'type': 'geojson',
       'data': data,
       'tolerance': 0.5,
     });
+
     map?.addLayer({
       'id': nombreSource,
       'type': 'fill',
@@ -463,6 +501,7 @@ export class CapasDiputacion implements OnInit {
         ],
       }
     });
+
     map?.addLayer({
       'id': nombreSource + '_border',
       'type': 'line',
@@ -483,14 +522,32 @@ export class CapasDiputacion implements OnInit {
       }
     });
   }
+
   async cargarCapaInterfazHidraulica(map: maplibregl.Map, urlGeoJSON: string, nombreSource: string, checked: boolean) {
     const respuesta = await fetch(urlGeoJSON);
     const data = await respuesta.json();
+
     map?.addSource(nombreSource, {
       'type': 'geojson',
       'data': data,
     });
+
     this.cargarImagen(map, 'cuadricula-hidraulica', '/assets/capas/icons/cuadricula.png');
+
+    map?.addLayer({
+      'id': `${nombreSource}_pattern`,
+      'type': 'fill',
+      'source': nombreSource,
+      'layout': {
+        'visibility': checked ? 'visible' : 'none',
+      },
+      'filter': ['==', ['get', 'type'], 'SE'],
+      'paint': {
+        'fill-pattern': 'cuadricula-hidraulica',
+        'fill-opacity': 1,
+      }
+    });
+
     map?.addLayer({
       'id': nombreSource,
       'type': 'fill',
@@ -511,19 +568,7 @@ export class CapasDiputacion implements OnInit {
         ],
       }
     });
-    map?.addLayer({
-      'id': `${nombreSource}_pattern`,
-      'type': 'fill',
-      'source': nombreSource,
-      'layout': {
-        'visibility': checked ? 'visible' : 'none',
-      },
-      'filter': ['==', ['get', 'type'], 'SE'],
-      'paint': {
-        'fill-pattern': 'cuadricula-hidraulica',
-        'fill-opacity': 1,
-      }
-    });
+
     map?.addLayer({
       'id': nombreSource + '_border',
       'type': 'line',
@@ -543,13 +588,16 @@ export class CapasDiputacion implements OnInit {
       }
     });
   }
+
   async cargarCapaRiesgoIncendioArbolado(map: maplibregl.Map, urlGeoJSON: string, nombreSource: string, checked: boolean) {
     const respuesta = await fetch(urlGeoJSON);
     const datosJson = await respuesta.json();
+
     map?.addSource(nombreSource, {
       'type': 'geojson',
       'data': datosJson,
     });
+
     map?.addLayer({
       'id': nombreSource,
       'type': 'fill',
@@ -571,6 +619,7 @@ export class CapasDiputacion implements OnInit {
         ],
       }
     });
+
     map?.addLayer({
       'id': nombreSource + '_border',
       'type': 'line',
@@ -585,175 +634,323 @@ export class CapasDiputacion implements OnInit {
       }
     });
   }
+
   /**Fin funciones para cargar las capas */
 
 
 
-  /**Funciones para mostrar la información de cada capa */
-  datosTerminosMunicipales(propiedades: any) {
-    let contenido = '<h3>Terminos Municipales</h3>';
-    contenido += 'Municipio: ' + propiedades?.['NAMEUNIT'] + "<br>";
-    contenido += 'Habitantes 2020: ' + propiedades?.['pob2020'] + "<br>";
-    contenido += 'Comarca: ' + propiedades?.['comarca'] + "<br>";
-    contenido += 'Área (Km<sup>2</sup>): ' + propiedades?.['km2'] + "<br>";
-    contenido += 'Parque: ' + propiedades?.['parque'] + "<br>";
-    contenido += 'Guia Respuesta Simplificada para incendio Urbano: <a href="' + propiedades?.['grs_urban_fire'] + '" target="_blank">Enlace</a><br>';
-    contenido += 'Guia Respuesta Simplificada para incendio  No Urbano: <a href="' + propiedades?.['grs_non_urban_fire'] + '" target="_blank">Enlace</a><br>';
-    contenido += 'Guia Respuesta Simplificada para inundación: <a href="' + propiedades?.['grs_flood'] + '" target="_blank">Enlace</a><br>';
-    contenido += 'Guia Respuesta Simplificada para Transporte de Mercancias Peligrosas: <a href="' + propiedades?.['grs_transportation_dangerous_goods'] + '" target="_blank">Enlace</a><br>';
-    contenido += 'Guia Respuesta Simplificada para Riesgo Químico: <a href="' + propiedades?.['grs_chemical_hazard'] + '" target="_blank">Enlace</a><br>';
-    return contenido;
-  }
 
-  datosInventarioRecursos(propiedades: any) {
-    const mostrar = (label: string, v: any): string => {
-      if (v === null || v === undefined || v === '' || v === 'NULL' || v === 0 || v === '0') return '';
-      const valor = v === true || v === 'true' ? 'Sí' : v === false || v === 'false' ? 'No' : v;
-      return `<b>${label}:</b> ${valor}<br>`;
+
+  /**Funciones para mostrar la información de cada capa*/
+  datosTerminosMunicipales(propiedades: any): string {
+    const name = propiedades?.['NAMEUNIT'] ?? 'N/D';
+    const pob = propiedades?.['pob2020'] ?? 'N/D';
+    const comarca = propiedades?.['comarca'] ?? 'N/D';
+    const km2 = propiedades?.['km2'] ?? 'N/D';
+    const parque = propiedades?.['parque'] ?? 'N/D';
+
+    const crearBotonGrs = (titulo: string, url?: string) => {
+      if (!url) return '';
+      return `<a href="${url}" target="_blank" rel="noopener" class="popup-btn btn-secondary">📄 ${titulo} ↗</a>`;
     };
 
     return `
-    <h3>Inventario Medios y recursos</h3>
+      <div class="popup-card">
+        <div class="popup-title">
+          <span>🏛️</span> <span>${name}</span>
+        </div>
 
-    ${mostrar('Nombre', propiedades?.nombre)}
-    ${mostrar('Identificador formulario Web', propiedades?.id)}
-    ${mostrar('Fecha actualización', propiedades?.date)}
-    ${mostrar('Se conocen datos medios humanos', propiedades?.is_medioshumanos)}
-    ${mostrar('Nº de bomberos voluntarios', propiedades?.num_bomb_vol)}
-    ${mostrar('Nº de bomberos protección civil', propiedades?.num_bomb_pc)}
-    ${mostrar('Observaciones Medios Humanos', propiedades?.gral_notes)}
-    ${mostrar('Nº de bomberos profesionales', propiedades?.num_bomb_pro)}
-    ${mostrar('Se conocen datos escala', propiedades?.is_escala)}
-    ${mostrar('Se conocen datos autobomba', propiedades?.is_autobomba)}
-    ${mostrar('Nº mangueras', propiedades?.num_maguera)}
-    ${mostrar('Nº mangueras 25 mm', propiedades?.mangaje25)}
-    ${mostrar('Nº mangueras 45 mm', propiedades?.mangaje45)}
-    ${mostrar('Nº mangueras 70 mm', propiedades?.mangaje70)}
-    ${mostrar('Nº Lanzas', propiedades?.num_lanza)}
-    ${mostrar('Capacidad agua autobomba (m³)', propiedades?.cap_agua_autobomba)}
-    ${mostrar('Antigüedad autobomba (años)', propiedades?.years_automba)}
-    ${mostrar('Notas autobomba', propiedades?.autobomba_notes)}
-    ${mostrar('Tipo autobomba', propiedades?.autobomba_tipo)}
-    ${mostrar('Tipo de manguera', propiedades?.manguera_tipo)}
-    ${mostrar('Caudal de lanza', propiedades?.lanza_caudal)}
-    ${mostrar('Tipo de bomba', propiedades?.bomba_tipo)}
-    ${mostrar('Se conocen datos motobomba', propiedades?.is_motobombas)}
-    ${mostrar('Tipo motobombas', propiedades?.motobombas_type)}
-    ${mostrar('Capacidad agua motobomba (m³)', propiedades?.cap_agua_motomba)}
-    ${mostrar('Antigüedad motobomba (años)', propiedades?.years_motomba)}
-    ${mostrar('Notas motobomba', propiedades?.motomba_notes)}
-    ${mostrar('Se conocen datos rescate altura', propiedades?.is_rescate)}
-    ${mostrar('EPIs rescate altura', propiedades?.epis_rescate_altura)}
-    ${mostrar('Accesorios rescate en altura', propiedades?.acc_rescate_altura)}
-    ${mostrar('Tipo Escala', propiedades?.TipoEscala)}
-    ${mostrar('Dimensiones escala (largo x ancho en m)', propiedades?.dim_escala)}
-    ${mostrar('Antigüedad escala (años)', propiedades?.edad_escala)}
-    ${mostrar('Más información restantes escalas', propiedades?.info_mas_escala)}
-    ${mostrar('EPIs tráfico', propiedades?.is_epis_trafico)}
-    ${mostrar('Se conocen datos accidentes de tráfico', propiedades?.is_acc_trafico)}
-    ${mostrar('Cabrestantes', propiedades?.is_cabrestantes)}
-    ${mostrar('Se conocen datos equipamiento incendios', propiedades?.is_incendios)}
-    ${mostrar('Fecha ITV', propiedades?.date_itv)}
-    ${mostrar('EPIs incendios', propiedades?.is_epis_incendios)}
-    ${mostrar('Material tecnológico', propiedades?.mat_tech_resp_notes)}
-    ${mostrar('Se conocen datos equipamiento inundaciones', propiedades?.is_inunda)}
-    ${mostrar('Bomba de limpieza', propiedades?.is_bomba_limp)}
-    ${mostrar('Bomba de achique', propiedades?.is_bomba_achique)}
-    ${mostrar('Tipo bomba achique', propiedades?.bomba_achique_type)}
-    ${mostrar('EPIs inundaciones', propiedades?.is_epis_inunda)}
-    ${mostrar('Se conocen datos accidentes químicos', propiedades?.is_quimico)}
-    ${mostrar('Equipo respiración', propiedades?.is_equipo_resp)}
-    ${mostrar('EPIs accidente químico', propiedades?.is_epis_acc_quim)}
-    ${mostrar('EPIs medio acuático', propiedades?.epis_medio_acuatico)}
-    ${mostrar('Barca', propiedades?.barca)}
-    ${mostrar('Tipo barca', propiedades?.barca_tipo)}
-    ${mostrar('Accesorios medio acuático', propiedades?.acc_medio_acuatico)}
-    ${mostrar('Trajes NRBQ', propiedades?.trajes_nrbq)}
-    ${mostrar('Contacto', propiedades?.contact)}
+        <div class="popup-info">
+          <div class="popup-row"><span class="label">Población (2020)</span><span class="value">${pob} hab.</span></div>
+          <div class="popup-row"><span class="label">Comarca</span><span class="value">${comarca}</span></div>
+          <div class="popup-row"><span class="label">Superficie</span><span class="value">${km2} km²</span></div>
+          <div class="popup-row"><span class="label">Parque Bomberos</span><span class="value badge">${parque}</span></div>
+        </div>
+
+        <div class="popup-links">
+          ${crearBotonGrs('GRS Incendio Urbano', propiedades?.['grs_urban_fire'])}
+          ${crearBotonGrs('GRS Incendio Forestal', propiedades?.['grs_non_urban_fire'])}
+          ${crearBotonGrs('GRS Inundación', propiedades?.['grs_flood'])}
+          ${crearBotonGrs('GRS Mercancías Peligrosas', propiedades?.['grs_transportation_dangerous_goods'])}
+          ${crearBotonGrs('GRS Riesgo Químico', propiedades?.['grs_chemical_hazard'])}
+        </div>
+      </div>
+    `;
+  }
+
+  datosInventarioRecursos(propiedades: any): string {
+    const mostrar = (label: string, v: any): string => {
+      if (v === null || v === undefined || v === '' || v === 'NULL' || v === 0 || v === '0') return '';
+      const valor = v === true || v === 'true' ? 'Sí' : v === false || v === 'false' ? 'No' : v;
+      return `<div class="popup-row"><span class="label">${label}</span><span class="value">${valor}</span></div>`;
+    };
+
+    const nombre = propiedades?.nombre ?? 'Recurso sin nombre';
+
+    return `
+      <div class="popup-card">
+        <div class="popup-title">
+          <span>📦</span> <span>${nombre}</span>
+        </div>
+
+        <div class="popup-info">
+          ${mostrar('ID Formulario', propiedades?.id)}
+          ${mostrar('Fecha actualización', propiedades?.date)}
+          ${mostrar('Datos Medios Humanos', propiedades?.is_medioshumanos)}
+          ${mostrar('Bomberos voluntarios', propiedades?.num_bomb_vol)}
+          ${mostrar('Bomberos Prot. Civil', propiedades?.num_bomb_pc)}
+          ${mostrar('Bomberos profesionales', propiedades?.num_bomb_pro)}
+          ${mostrar('Observaciones humanas', propiedades?.gral_notes)}
+          ${mostrar('Autobomba disponible', propiedades?.is_autobomba)}
+          ${mostrar('Capacidad agua autobomba', propiedades?.cap_agua_autobomba ? propiedades.cap_agua_autobomba + ' m³' : null)}
+          ${mostrar('Tipo autobomba', propiedades?.autobomba_tipo)}
+          ${mostrar('Antigüedad autobomba', propiedades?.years_automba ? propiedades.years_automba + ' años' : null)}
+          ${mostrar('Notas autobomba', propiedades?.autobomba_notes)}
+          ${mostrar('Nº Mangueras', propiedades?.num_maguera)}
+          ${mostrar('Mangueras 25mm', propiedades?.mangaje25)}
+          ${mostrar('Mangueras 45mm', propiedades?.mangaje45)}
+          ${mostrar('Mangueras 70mm', propiedades?.mangaje70)}
+          ${mostrar('Nº Lanzas', propiedades?.num_lanza)}
+          ${mostrar('Caudal de lanza', propiedades?.lanza_caudal)}
+          ${mostrar('Tipo de bomba', propiedades?.bomba_tipo)}
+          ${mostrar('Motobombas', propiedades?.is_motobombas)}
+          ${mostrar('Tipo motobombas', propiedades?.motobombas_type)}
+          ${mostrar('Capacidad motobomba', propiedades?.cap_agua_motomba ? propiedades.cap_agua_motomba + ' m³' : null)}
+          ${mostrar('Rescate en altura', propiedades?.is_rescate)}
+          ${mostrar('EPIs rescate altura', propiedades?.epis_rescate_altura)}
+          ${mostrar('Accesorios altura', propiedades?.acc_rescate_altura)}
+          ${mostrar('Tipo Escala', propiedades?.TipoEscala)}
+          ${mostrar('Dimensiones escala', propiedades?.dim_escala)}
+          ${mostrar('Accidentes tráfico', propiedades?.is_acc_trafico)}
+          ${mostrar('EPIs tráfico', propiedades?.is_epis_trafico)}
+          ${mostrar('Cabrestantes', propiedades?.is_cabrestantes)}
+          ${mostrar('Equipamiento incendios', propiedades?.is_incendios)}
+          ${mostrar('EPIs incendios', propiedades?.is_epis_incendios)}
+          ${mostrar('Fecha ITV', propiedades?.date_itv)}
+          ${mostrar('Material tecnológico', propiedades?.mat_tech_resp_notes)}
+          ${mostrar('Equip. Inundaciones', propiedades?.is_inunda)}
+          ${mostrar('Bomba de limpieza', propiedades?.is_bomba_limp)}
+          ${mostrar('Bomba de achique', propiedades?.is_bomba_achique)}
+          ${mostrar('EPIs inundaciones', propiedades?.is_epis_inunda)}
+          ${mostrar('Accidentes químicos', propiedades?.is_quimico)}
+          ${mostrar('Equipo respiración', propiedades?.is_equipo_resp)}
+          ${mostrar('Trajes NRBQ', propiedades?.trajes_nrbq)}
+          ${mostrar('Medio acuático', propiedades?.epis_medio_acuatico)}
+          ${mostrar('Barca', propiedades?.barca)}
+          ${mostrar('Tipo barca', propiedades?.barca_tipo)}
+          ${mostrar('Contacto', propiedades?.contact)}
+        </div>
+      </div>
+    `;
+  }
+
+  datosHidrantes(propiedades: any): string {
+  if (!propiedades) return '<p class="popup-empty">Sin información disponible</p>';
+
+  const id = propiedades.id ?? 'N/D';
+  const lat = propiedades.lat ?? 'N/D';
+  const long = propiedades.long ?? 'N/D';
+  const origen = propiedades.source ?? 'N/D';
+  const fecha = propiedades.date ?? 'N/D';
+  const urlMaps = propiedades.url_google_maps;
+
+  // Mapeo Tipo de Conector
+  const mapaTipoConector: Record<string | number, string> = {
+    1: 'Racor Barcelona',
+    2: 'Racor Madrid',
+    3: 'Racor rosca 40 mm'
+  };
+  const rawConector = propiedades.connector_type ?? propiedades.tipo_conector;
+  const tipoConector = (rawConector !== null && rawConector !== undefined && mapaTipoConector[rawConector]) 
+    ? mapaTipoConector[rawConector] 
+    : 'No indicado';
+
+  // Mapeo Tipo de Hidrante
+  const mapaTipoHidrante: Record<string | number, string> = {
+    1: 'Hidrante de columna',
+    2: 'Hidrante de arqueta',
+    3: 'Embalse'
+  };
+  const rawHidrante = propiedades.hydrant_type ?? propiedades.tipo_hidrante;
+  const tipoHidrante = (rawHidrante !== null && rawHidrante !== undefined && mapaTipoHidrante[rawHidrante]) 
+    ? mapaTipoHidrante[rawHidrante] 
+    : 'No indicado';
+
+  // Lógica de foto con manejo de rutas flexible
+  let fotoHtml = '';
+  let pathPhoto: string = propiedades.path_photo || '';
+  if (pathPhoto.trim() !== '') {
+    pathPhoto = pathPhoto.replace(/\\/g, '/');
+    const nombreArchivo = pathPhoto.split('/').pop();
+    if (nombreArchivo && nombreArchivo.trim() !== '') {
+      const src = `/assets/foto_hidrantes/${nombreArchivo}`;
+      fotoHtml = `<img src="${src}" alt="Foto Hidrante ${id}" class="popup-img" onerror="this.style.display='none'" />`;
+    }
+  }
+
+  return `
+    <div class="popup-card">
+      <div class="popup-title">
+        <span>🧯</span> <span>Hidrante #${id}</span>
+      </div>
+      ${fotoHtml}
+      <div class="popup-info">
+        <div class="popup-row">
+          <span class="label">Tipo Conector</span>
+          <span class="value badge">${tipoConector}</span>
+        </div>
+        <div class="popup-row">
+          <span class="label">Tipo Hidrante</span>
+          <span class="value badge">${tipoHidrante}</span>
+        </div>
+        <div class="popup-row">
+          <span class="label">Coordenadas</span>
+          <span class="value">${lat}, ${long}</span>
+        </div>
+        <div class="popup-row">
+          <span class="label">Origen Datos</span>
+          <span class="value">${origen}</span>
+        </div>
+        <div class="popup-row">
+          <span class="label">Fecha</span>
+          <span class="value">${fecha}</span>
+        </div>
+      </div>
+      ${urlMaps ? `
+        <a href="${urlMaps}" target="_blank" rel="noopener noreferrer" class="popup-btn">
+          <span>Ver en Google Maps</span> ↗
+        </a>
+      ` : ''}
+    </div>
   `;
+}
+
+  datosPoligonosIndustriales(propiedades: any, geometry: any): string {
+    const nombre = propiedades?.['pol_name'] ?? 'Polígono Industrial';
+    const ttmm = propiedades?.['ttmm'] ?? 'N/D';
+    const sector = propiedades?.['sector'] ?? 'N/D';
+    const empresas = propiedades?.['companies'] ?? 'N/D';
+    const actividades = propiedades?.['activities'];
+    const esAgricola = propiedades?.['is_farming'] == 1 ? 'Sí' : 'No';
+
+    const [lng, lat] = geometry?.coordinates ?? [0, 0];
+    const urlMaps = `https://www.google.com/maps/place/${lat},${lng}`;
+
+    return `
+      <div class="popup-card">
+        <div class="popup-title">
+          <span>🏭</span> <span>${nombre}</span>
+        </div>
+
+        <div class="popup-info">
+          <div class="popup-row"><span class="label">Municipio</span><span class="value">${ttmm}</span></div>
+          <div class="popup-row"><span class="label">Sector Principal</span><span class="value">${sector}</span></div>
+          <div class="popup-row"><span class="label">Empresas clave</span><span class="value">${empresas}</span></div>
+          ${actividades ? `<div class="popup-row"><span class="label">Actividades</span><span class="value">${actividades}</span></div>` : ''}
+          <div class="popup-row"><span class="label">Ind. Agrícola</span><span class="value badge">${esAgricola}</span></div>
+        </div>
+
+        <a href="${urlMaps}" target="_blank" rel="noopener" class="popup-btn">
+          <span>Ver en Google Maps</span> ↗
+        </a>
+      </div>
+    `;
   }
 
-  datosHidrantes(propiedades: any) {
-    let contenido = '<h3>Informacion de Hidrantes</h3>';
-    contenido += "<b>Identificador:</b> " + propiedades?.['id'] + "<br>";
-    contenido += "<b>Latitud:</b> " + propiedades?.['lat'] + "<br>";
-    contenido += "<b>Longitud:</b> " + propiedades?.['long'] + "<br>";
-    contenido += "<b>Origen Datos:</b> " + propiedades?.['source'] + "<br>";
-    if (propiedades?.['connector_type']) {
-      contenido += "<b>Tipo Conector:</b> " + propiedades?.['connector_type'] + "<br>";
-    } else {
-      contenido += "<b>Tipo Conector:</b> " + 'No indicado' + "<br>";
-    }
-    contenido += "<b>Fecha:</b> " + propiedades?.['date'] + "<br>";
-    let pathPhoto = propiedades?.['path_photo'];
-    if (pathPhoto && pathPhoto.split('foto_hidrantes/')[1]?.trim() !== '') {
-      contenido += "<b>Foto:</b>  <img src='" + urlFotoHidrante(pathPhoto) + "'><br>";
-    }
-    contenido += "<b>URL Google Maps:</b> <a href='" + propiedades?.['url_google_maps'] + "' target='_blank'>Enlace</a><br>";
-    return contenido;
-  }
-  datosPoligonosIndustriales(propiedades: any, geometry: any) {
-    let contenido = '<h3>Informacion de Poligonos Industriales</h3>';
-    contenido += "<b>Municipio:</b> " + propiedades?.['ttmm'] + "<br>";
-    contenido += "<b>Nombre:</b> " + propiedades?.['pol_name'] + "<br>";
-    contenido += "<b>Sector Mayoritario:</b> " + propiedades?.['sector'] + "<br>";
-    contenido += "<b>Empresas Representativas:</b> " + propiedades?.['companies'] + "<br>";
-    if (propiedades?.['activities'] != null) {
-      contenido += "<b>Actividades:</b> " + propiedades?.['activities'] + "<br>";
-    }
-    contenido += "<b>¿Industria Agricola?:</b> " + (propiedades?.['is_farming'] == 1 ? "Si" : "No") + "<br>";
-    contenido += "<b>Coord X:</b> " + propiedades?.['Coord X'] + "<br>";
-    contenido += "<b>Coord Y:</b> " + propiedades?.['Coord Y'] + "<br>";
-    const [lng, lat] = geometry?.coordinates;
-    contenido += "<b>URL Google Maps:</b> <a href='https://www.google.com/maps/place/" + lat + "," + lng + "' target='_blank'>Enlace</a><br>";
-    return contenido;
-  }
-  datosEstacionesServicio(propiedades: any, geometry: any) {
-    let contenido = '<h3>Informacion de Estaciones de Servicio</h3>';
-    contenido += "<b>Nombre:</b> " + propiedades?.['name'] + "<br>";
-    contenido += "<b>Dirección:</b> " + propiedades?.['direction'] + "<br>";
-    contenido += "<b>Compañia:</b> " + propiedades?.['company'] + "<br>";
-    contenido += "<b>Horario:</b> " + propiedades?.['horario'] + "<br>";
-    const [lng, lat] = geometry?.coordinates;
-    contenido += "<b>URL Google Maps:</b> <a href='https://www.google.com/maps/place/" + lat + "," + lng + "' target='_blank'>Enlace</a><br>";
-    return contenido;
-  }
-  datosPoliciaLocal(propiedades: any, geometry: any) {
-    let contenido = '<h3>Informacion de Policia Local</h3>';
-    contenido += "<b>Ayuntamiento:</b> " + propiedades?.['ayto'] + "<br>";
-    contenido += "<b>Tipo:</b> " + propiedades?.['tipos'] + "<br>";
-    contenido += "<b>Provincia:</b> " + propiedades?.['provincia'] + "<br>";
-    const [lng, lat] = geometry?.coordinates;
-    contenido += "<b>URL Google Maps:</b> <a href='https://www.google.com/maps/place/" + lat + "," + lng + "' target='_blank'>Enlace</a><br>";
-    return contenido;
-  }
-  datosRutasEscolares(propiedades: any) {
-    let contenido = '<h3>Informacion de Rutas Escolares</h3>';
-    contenido += "<b>Coordenads inicio (EPSG: 25830):</b> " + propiedades?.['start'] + "<br>";
-    contenido += "<b>Coordenads fin (EPSG: 25830):</b> " + propiedades?.['end'] + "<br>";
-    contenido += "<b>Cost:</b> " + propiedades?.['cost'] + "<br>";
-    contenido += "<b>Desde:</b> " + propiedades?.['from'] + "<br>";
-    contenido += "<b>Hasta:</b> " + propiedades?.['to'] + "<br>";
-    contenido += "<b>Empresa:</b> " + propiedades?.['empresa'] + "<br>";
-    contenido += "<b>Tipo Ruta:</b> " + propiedades?.['tipo'] + "<br>";
-    return contenido;
-  }
-  datosCentrosSalud(propiedades: any) {
-    let contenido = '<h3>Informacion de Centros de Salud</h3>';
-    contenido += "<b>Tipo:</b> " + propiedades?.['d_tipocent'] + "<br>";
-    contenido += "<b>Nombre:</b> " + propiedades?.['a_nombre'] + "<br>";
-    if (propiedades?.['a_complejo'] != null) {
-      contenido += "<b>Complejo:</b> " + propiedades?.['a_complejo'] + "<br>";
-    }
-    contenido += "<b>Dirección:</b> " + propiedades?.['a_direccio'] + "<br>";
-    contenido += "<b>Codigo Postal:</b> " + propiedades?.['a_cod_post'] + "<br>";
-    contenido += "<b>Latitud:</b> " + propiedades?.['n_latitud'] + "<br>";
-    contenido += "<b>Longitud:</b> " + propiedades?.['n_longitud'] + "<br>";
+  datosEstacionesServicio(propiedades: any, geometry: any): string {
+    const nombre = propiedades?.['name'] ?? 'Estación de Servicio';
+    const direccion = propiedades?.['direction'] ?? 'N/D';
+    const compania = propiedades?.['company'] ?? 'N/D';
+    const horario = propiedades?.['horario'] ?? 'N/D';
 
-    contenido += "<b>URL Google Maps:</b> <a href='https://www.google.com/maps/place/" + propiedades?.['n_latitud'] + "," + propiedades?.['n_longitud'] + "' target='_blank'>Enlace</a><br>";
-    return contenido;
+    const [lng, lat] = geometry?.coordinates ?? [0, 0];
+    const urlMaps = `https://www.google.com/maps/place/${lat},${lng}`;
+
+    return `
+      <div class="popup-card">
+        <div class="popup-title">
+          <span>⛽</span> <span>${nombre}</span>
+        </div>
+
+        <div class="popup-info">
+          <div class="popup-row"><span class="label">Compañía</span><span class="value badge">${compania}</span></div>
+          <div class="popup-row"><span class="label">Dirección</span><span class="value">${direccion}</span></div>
+          <div class="popup-row"><span class="label">Horario</span><span class="value">${horario}</span></div>
+        </div>
+
+        <a href="${urlMaps}" target="_blank" rel="noopener" class="popup-btn">
+          <span>Ver en Google Maps</span> ↗
+        </a>
+      </div>
+    `;
   }
-  toggleGrupoDiputacion(grupo: any) {
-    this.gruposAbiertos[grupo.id] = !this.gruposAbiertos[grupo.id];
+
+  datosPoliciaLocal(propiedades: any, geometry: any): string {
+    const ayto = propiedades?.['ayto'] ?? 'Ayuntamiento';
+    const tipo = propiedades?.['tipos'] ?? 'N/D';
+    const provincia = propiedades?.['provincia'] ?? 'N/D';
+
+    const [lng, lat] = geometry?.coordinates ?? [0, 0];
+    const urlMaps = `https://www.google.com/maps/place/${lat},${lng}`;
+
+    return `
+      <div class="popup-card">
+        <div class="popup-title">
+          <span>👮</span> <span>Policía Local - ${ayto}</span>
+        </div>
+
+        <div class="popup-info">
+          <div class="popup-row"><span class="label">Tipo</span><span class="value">${tipo}</span></div>
+          <div class="popup-row"><span class="label">Provincia</span><span class="value">${provincia}</span></div>
+        </div>
+
+        <a href="${urlMaps}" target="_blank" rel="noopener" class="popup-btn">
+          <span>Ver en Google Maps</span> ↗
+        </a>
+      </div>
+    `;
+  }
+
+  datosRutasEscolares(propiedades: any): string {
+    const nombre = propiedades?.['nombre'] ?? 'Ruta Escolar';
+
+    return `
+      <div class="popup-card">
+        <div class="popup-title">🚌 <span>${nombre}</span></div>
+      </div>
+    `;
+  }
+
+  datosCentrosSalud(propiedades: any, geometry: any): string {
+    const nombre = propiedades?.['a_nombre'] ?? 'Centro Sanitario';
+    const tipo = propiedades?.['d_tipocent'] ?? 'N/D';
+    const [lng, lat] = geometry?.coordinates ?? [0, 0];
+    const urlMaps = `https://www.google.com/maps/place/${lat},${lng}`;
+
+    return `
+      <div class="popup-card">
+        <div class="popup-title">🏥 <span>${nombre}</span></div>
+
+        <div class="popup-info">
+          <div class="popup-row">
+            <span class="label">Tipo Centro</span>
+            <span class="value badge">${tipo}</span>
+          </div>
+        </div>
+
+        <a href="${urlMaps}" target="_blank" rel="noopener" class="popup-btn">
+          <span>Ver en Google Maps</span> ↗
+        </a>
+      </div>
+    `;
+  }
+
+  toggleGrupoDiputacion(grupo: any): void {
+    const idGrupo = typeof grupo === 'object' ? grupo?.id : grupo;
+
+    if (idGrupo !== undefined) {
+      this.gruposAbiertos[idGrupo] = !this.gruposAbiertos[idGrupo];
+    }
   }
 }
+
