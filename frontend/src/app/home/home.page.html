@@ -258,21 +258,30 @@
     }
   </div>
 
-  <div class="boton-leyendas">
-    <ion-button
-      (click)="mostrarOpcionLeyendas = !mostrarOpcionLeyendas; mostrarListaCapasOnline = false; mostrarListaCapas=false; mostrarListaCapasOffline=false; mostrarListaTerrenos = false"
-      size="default" class="btn-blanco" id="ajustes">
-      <ion-icon name="construct-outline"></ion-icon>
-    </ion-button>
-  </div>
-  @if (mostrarOpcionLeyendas) {
-  <ion-list id="lista-leyendas">
-    <ion-item>
-      <ion-checkbox name="mostrarLeyendas" [checked]="mostrarLeyendas"
-        (ionChange)="mostrarLeyendas= !mostrarLeyendas;mostrarOpcionLeyendas = !mostrarOpcionLeyendas">
-        <ion-label>Mostrar Leyendas</ion-label></ion-checkbox>
-    </ion-item>
-  </ion-list>
+ <div class="boton-leyendas">
+  <ion-button
+    (click)="mostrarOpcionLeyendas = !mostrarOpcionLeyendas; mostrarListaCapasOnline = false; mostrarListaCapas=false; mostrarListaCapasOffline=false; mostrarListaTerrenos = false"
+    size="default" class="btn-blanco" id="ajustes">
+    <ion-icon name="construct-outline"></ion-icon>
+  </ion-button>
+</div>
+
+@if (mostrarOpcionLeyendas) {
+<ion-list id="lista-leyendas">
+  <ion-item>
+    <ion-checkbox name="mostrarLeyendas" [checked]="mostrarLeyendas"
+      (ionChange)="mostrarLeyendas = !mostrarLeyendas; mostrarOpcionLeyendas = !mostrarOpcionLeyendas">
+      <ion-label>Mostrar Leyendas</ion-label>
+    </ion-checkbox>
+  </ion-item>
+
+  <!-- Opción de Modo Oscuro / Claro con el slot="start" para que se vea el icono -->
+  <ion-item button (click)="toggleDarkMode()">
+    <ion-icon [name]="esModoOscuro ? 'sunny-outline' : 'moon-outline'" slot="start"></ion-icon>
+    <ion-label>{{ esModoOscuro ? 'Modo Claro' : 'Modo Oscuro' }}</ion-label>
+  </ion-item>
+</ion-list>
+
   }
   <div class="boton-emergencias">
     <ion-button (click)="abrirModalEmergencia()" size="default" class="btn-blanco">
@@ -309,17 +318,29 @@
       Pincha en el mapa para seleccionar la ubicación
     </div>
   }
-<ion-modal [isOpen]="isModalOpen" class="modal-info modal-redondo" (didDismiss)="setOpen(false)">
+```html
+<ion-modal
+  [isOpen]="isModalOpen"
+  class="modal-info modal-redondo"
+  (didDismiss)="setOpen(false)"
+>
   <ng-template>
     <div class="modal-sin-toolbar">
-      <!-- Botón con la X directamente en texto -->
-      <button class="btn-cerrar-drch" (click)="setOpen(false)" aria-label="Cerrar">
+
+      <button
+        class="btn-cerrar-drch"
+        (click)="setOpen(false)"
+        aria-label="Cerrar"
+        type="button"
+      >
         ✕
       </button>
 
       <div class="modal-body">
         <div [innerHTML]="modalContent"></div>
       </div>
+
     </div>
   </ng-template>
 </ion-modal>
+```
