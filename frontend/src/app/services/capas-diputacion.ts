@@ -783,8 +783,8 @@ export class CapasDiputacion implements OnInit {
     pathPhoto = pathPhoto.replace(/\\/g, '/');
     const nombreArchivo = pathPhoto.split('/').pop();
     if (nombreArchivo && nombreArchivo.trim() !== '') {
-      const src = `/assets/foto_hidrantes/${nombreArchivo}`;
-      fotoHtml = `<img src="${src}" alt="Foto Hidrante ${id}" class="popup-img" onerror="this.style.display='none'" />`;
+    //  const src = `/assets/foto_hidrantes/${nombreArchivo}`;
+      fotoHtml = `<img src="${urlFotoHidrante(pathPhoto)}" alt="Foto Hidrante ${id}" class="popup-img" onerror="this.style.display='none'" />`;
     }
   }
 
