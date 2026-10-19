@@ -1,14 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';  // ← de Angular
 import { FormsModule } from '@angular/forms';
-import { IonListHeader, IonModal, IonButton, IonButtons, IonIcon, IonLabel, IonCheckbox, IonHeader, IonToolbar, IonTitle, IonList, IonRadioGroup, IonRadio, IonItem, IonContent } from '@ionic/angular/standalone';
+import { IonListHeader, IonModal, IonIcon, IonLabel, IonCheckbox, IonHeader, IonToolbar, IonTitle, IonList, IonRadioGroup, IonRadio, IonItem, IonContent } from '@ionic/angular/standalone';
 
+import { add, remove, scanOutline, informationCircleOutline, layersOutline, ellipsisHorizontal,
+   searchOutline, resizeOutline, squareOutline, settingsOutline, mapOutline } from 'ionicons/icons';
 import { closeCircleOutline, locationOutline, documentTextOutline, saveOutline,
    closeOutline, navigateOutline, documentOutline, alertCircleOutline, 
    cloudUpload, chevronUpOutline, chevronDownOutline, 
    globe, albums, close, download, 
    flash, syncOutline} from 'ionicons/icons';
-import { ModalController } from '@ionic/angular/standalone';
+import { ModalController, ToastController } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { constructOutline, sunnyOutline, moonOutline } from 'ionicons/icons';
 import { MapaService } from '../services/mapa-service';
@@ -21,6 +23,19 @@ import { CapasService } from '../services/capas.service';
 import { CapasSqliteService } from '../services/capas-sqlite.service';
 import { ActualizarCapasComponent } from '../components/actualizar-capas/actualizar-capas.component';
 import { Capacitor } from '@capacitor/core';
+import { MedicionService, TipoMedicion } from '../services/medicion';
+import { BuscadorMunicipiosService, Municipio } from '../services/buscador-municipios';
+import { ExportarPdfService, ElementoLeyenda } from '../services/exportar-pdf';
+
+type Panel = 'capas' | 'diputacion' | 'offline' | 'online' | 'mas' | 'terrenos' | 'ajustes';
+
+/**
+ * Extensión del botón de vista global [oeste, sur, este, norte].
+ * Pendiente de que Ana decida; alternativas:
+ *   Castilla y León: [-7.08, 40.08, -1.77, 43.24]
+ *   Península:       [-9.6, 35.9, 3.4, 43.9]
+ */
+const EXTENSION_VISTA_GLOBAL: [number, number, number, number] = [-5.74, 40.08, -4.25, 41.2]; // Provincia de Ávila
 //import { IonButtons } from '@ionic/angular';
 //import { IonImg } from '@ionic/angular';
 addIcons({
@@ -32,17 +47,13 @@ addIcons({
   selector: 'app-home',
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
-  imports: [CommonModule, FormsModule, IonListHeader, IonModal, IonButton, IonButtons, IonIcon, IonLabel, IonCheckbox, IonHeader, IonToolbar, IonTitle, IonList, IonRadioGroup, IonRadio, IonItem, IonContent],
+  imports: [CommonModule, FormsModule, IonListHeader, IonModal, IonIcon, IonLabel, IonCheckbox, IonHeader, IonToolbar, IonTitle, IonList, IonRadioGroup, IonRadio, IonItem, IonContent],
 })
 export class HomePage implements OnInit {
-  mostrarListaCapas = false;
-  mostrarListaCapasOffline = false;
-  mostrarListaCapasOnline = false;
-  mostrarListaTerrenos = false;
+  panel: Panel | null = null;
   // El botón de actualizar capas solo existe en el móvil (en la web las capas van en vivo)
   esNativo = Capacitor.isNativePlatform();
   sinCapasDescargadas = false;
-  mostrarOpcionLeyendas = false;
   mostrarLeyendas = false;
   isModalOpen = false;
   modalContent: string = "";
@@ -58,6 +69,16 @@ export class HomePage implements OnInit {
   resultadosEmergencia: ResultadosEmergencia | null = null;
   esModoOscuro = false;
 
+  // Botón de información: los popups solo se abren con este modo activo
+  modoInfo = false;
+
+  textoBusqueda = '';
+  resultadosBusqueda: Municipio[] = [];
+  errorBusqueda = '';
+  mostrarResultados = false;
+
+  generandoPdf = false;
+
  toggleDarkMode() {
     this.esModoOscuro = !this.esModoOscuro;
     document.body.classList.toggle('dark', this.esModoOscuro);
@@ -69,30 +90,29 @@ export class HomePage implements OnInit {
     public capasOnline: CapasOnline,
     public emergenciaService: EmergenciaService,
     private capasService: CapasService,
-    private capasSqlite: CapasSqliteService) {
+    private capasSqlite: CapasSqliteService,
+    private toastCtrl: ToastController,
+    public medicion: MedicionService,
+    private buscador: BuscadorMunicipiosService,
+    private exportarPdfService: ExportarPdfService) {
     addIcons({ closeCircleOutline, locationOutline, documentTextOutline, saveOutline, closeOutline, 
               navigateOutline, documentOutline, alertCircleOutline, constructOutline, 
-              cloudUpload, chevronUpOutline, chevronDownOutline, globe, albums, close, download, syncOutline });
+              cloudUpload, chevronUpOutline, chevronDownOutline, globe, albums, close, download, syncOutline,
+              add, remove, scanOutline, informationCircleOutline, layersOutline, ellipsisHorizontal,
+              searchOutline, resizeOutline, squareOutline, settingsOutline, mapOutline });
     this.emergencia = this.emergenciaService.getEmergenciaVacia();
   }
 
   ngOnInit() {
-    this.capasDiputacion.modalClick$.subscribe((html: string) => {
-      this.modalContent = html;
-      this.setOpen(true);
-    });
-    this.capasOffline.modalClick$.subscribe((html: string) => {
-      this.modalContent = html;
-      this.setOpen(true);
-    });
-    this.capasOnline.modalClick$.subscribe((html: string) => {
-      this.modalContent = html;
-      this.setOpen(true);
-    });
-    this.emergenciaService.modalClick$.subscribe((html: string) => {
-      this.modalContent = html;
-      this.setOpen(true);
-    });
+    // Los clics sobre elementos solo abren el popup si está activo el botón de información,
+    // así arrastrar o moverse por el mapa no abre ventanas sin querer
+    for (const origen of [this.capasDiputacion, this.capasOffline, this.capasOnline, this.emergenciaService]) {
+      origen.modalClick$.subscribe((html: string) => {
+        if (!this.modoInfo || this.medicion.activa || this.modoSeleccionMapa) return;
+        this.modalContent = html;
+        this.setOpen(true);
+      });
+    }
   }
 
   ocultarLoader () {
@@ -144,8 +164,10 @@ export class HomePage implements OnInit {
       this.capasOnline.cargarCapasOnline(this.mapa.map!);
       if (this.mostrarLimpiarEmergencias) 
         this.dibujarEmergenciaEnMapa();
+      this.medicion.redibujar();
+      this.buscador.resaltar(this.mapa.map!);
     });
-    this.mostrarListaTerrenos = false;
+    this.panel = null;
   }
 
 
@@ -188,6 +210,122 @@ export class HomePage implements OnInit {
     }
     //Si la capa existe en el mapa, se oculta o se muestra
     this.mapa.onCapasChange(capa, event);
+  }
+
+  /* =========================
+     BARRA DE HERRAMIENTAS
+     ========================= */
+
+  /** Abre un panel de la barra, o lo cierra si ya estaba abierto */
+  togglePanel(panel: Panel) {
+    this.panel = this.panel === panel ? null : panel;
+  }
+
+  cerrarPaneles() {
+    this.panel = null;
+  }
+
+  /** El botón de capas queda resaltado con su menú o con cualquiera de sus listas abierta */
+  esPanelCapas(): boolean {
+    return this.panel === 'capas' || this.panel === 'diputacion' || this.panel === 'offline' || this.panel === 'online';
+  }
+
+  esPanelMas(): boolean {
+    return this.panel === 'mas' || this.panel === 'terrenos' || this.panel === 'ajustes';
+  }
+
+  /** Encuadra el mapa en la extensión de la vista global */
+  vistaGlobal() {
+    const [o, s, e, n] = EXTENSION_VISTA_GLOBAL;
+    this.mapa.map?.fitBounds([[o, s], [e, n]], { padding: 20 });
+  }
+
+  /**
+   * Activa o desactiva el modo información. Si no hay ninguna capa visible
+   * no se activa y se avisa al usuario de que active una.
+   */
+  async toggleModoInfo() {
+    if (this.modoInfo) {
+      this.modoInfo = false;
+      return;
+    }
+    if (!this.hayCapasActivas()) {
+      await this.avisar('Activa alguna capa para poder consultar la información de sus elementos', 'warning');
+      return;
+    }
+    if (this.medicion.tipo) this.medicion.borrar();
+    this.cerrarPaneles();
+    this.modoInfo = true;
+  }
+
+  private hayCapasActivas(): boolean {
+    return this.capasVisibles().length > 0 || this.mostrarLimpiarEmergencias;
+  }
+
+  /** Capas marcadas en cualquiera de las tres listas */
+  private capasVisibles(): any[] {
+    return [...this.capasDiputacion.capas, ...this.capasOffline.capasOffline, ...this.capasOnline.capasOnline]
+      .filter(c => c.checked);
+  }
+
+  iniciarMedicion(tipo: TipoMedicion) {
+    this.modoInfo = false;
+    this.cerrarPaneles();
+    this.medicion.iniciar(this.mapa.map!, tipo);
+  }
+
+  async buscarMunicipio() {
+    const texto = this.textoBusqueda;
+    try {
+      const resultados = await this.buscador.buscar(texto);
+      if (texto !== this.textoBusqueda) return; // llegó tarde, ya se ha escrito otra cosa
+      this.resultadosBusqueda = resultados;
+      this.errorBusqueda = '';
+      this.mostrarResultados = texto.trim().length >= 2;
+    } catch {
+      this.resultadosBusqueda = [];
+      this.errorBusqueda = 'No están disponibles los términos municipales';
+      this.mostrarResultados = true;
+    }
+  }
+
+  irAPrimerResultado() {
+    if (this.resultadosBusqueda.length) this.irAMunicipio(this.resultadosBusqueda[0]);
+  }
+
+  irAMunicipio(municipio: Municipio) {
+    this.cerrarPaneles();
+    this.buscador.irA(this.mapa.map!, municipio);
+    this.textoBusqueda = municipio.nombre;
+    this.mostrarResultados = false;
+  }
+
+  limpiarBusqueda() {
+    this.textoBusqueda = '';
+    this.resultadosBusqueda = [];
+    this.mostrarResultados = false;
+    if (this.mapa.map) this.buscador.limpiar(this.mapa.map);
+  }
+
+  /** Genera un PDF con lo que se ve en el mapa y la leyenda de las capas visibles */
+  async exportarPdf() {
+    this.generandoPdf = true;
+    try {
+      const leyenda: ElementoLeyenda[] = this.capasVisibles().map(c => ({ texto: c.texto, imagen: c.imagen }));
+      await this.exportarPdfService.exportar(this.mapa.map!, leyenda);
+      this.cerrarPaneles();
+      if (this.esNativo) await this.avisar('PDF guardado en Documentos', 'success');
+    } catch (e) {
+      console.error('Error generando el PDF', e);
+      await this.avisar('No se ha podido generar el PDF', 'danger');
+    } finally {
+      this.generandoPdf = false;
+    }
+  }
+
+  private async avisar(mensaje: string, color: string) {
+    const toast = await this.toastCtrl.create({ message: mensaje, duration: 3000, color, position: 'bottom' });
+    await toast.present();
   }
 
   /**
@@ -263,11 +401,7 @@ export class HomePage implements OnInit {
    * ha descargado/actualizado/eliminado algo, se recargan las capas del mapa.
    */
   async abrirActualizarCapas() {
-    this.mostrarListaCapas = false;
-    this.mostrarListaCapasOffline = false;
-    this.mostrarListaCapasOnline = false;
-    this.mostrarListaTerrenos = false;
-    this.mostrarOpcionLeyendas = false;
+    this.cerrarPaneles();
 
     const modal = await this.modalCtrl.create({
       component: ActualizarCapasComponent,
