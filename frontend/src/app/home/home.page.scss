@@ -1,7 +1,28 @@
 @import "maplibre-gl/dist/maplibre-gl.css";
 
 .cabecera {
-  --background: #ffffff;
+  --background: var(--platea-cabecera);
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --border-color: var(--platea-cabecera);
+}
+
+.logo-cabecera img {
+  display: block;
+  height: 60px;
+  width: auto;
+}
+
+/* Cada tema usa la versión del logo que se lee sobre su gris */
+.logo-cabecera .logo-oscuro,
+:host-context(body.dark) .logo-cabecera .logo-claro {
+  display: none;
+}
+
+:host-context(body.dark) .logo-cabecera .logo-oscuro {
+  display: block;
 }
 
 /* =========================
@@ -18,7 +39,7 @@
 
 /* =========================
    BARRA DE HERRAMIENTAS
-   Columna de botones en el lado izquierdo con el buscador arriba
+   Columna de botones en el lado derecho
    ========================= */
 
 $tam-boton: 42px;
@@ -28,7 +49,7 @@ $top-barra: calc(var(--offset-top, 0px) + #{$hueco});
 .barra-herramientas {
   position: absolute;
   top: $top-barra;
-  left: calc(#{$hueco} + var(--ion-safe-area-left, 0px));
+  right: calc(#{$hueco} + var(--ion-safe-area-right, 0px));
   z-index: 1000;
   display: flex;
   flex-direction: column;
@@ -44,8 +65,8 @@ $top-barra: calc(var(--offset-top, 0px) + #{$hueco});
 .botones {
   display: flex;
   flex-direction: column;
-  align-self: flex-start;
-  background: var(--platea-superficie);
+  align-self: flex-end;
+  background: var(--platea-cabecera);
   border-radius: 10px;
   box-shadow: var(--platea-sombra);
   overflow: hidden;
@@ -59,8 +80,8 @@ $top-barra: calc(var(--offset-top, 0px) + #{$hueco});
   justify-content: center;
   padding: 0;
   border: none;
-  border-bottom: 1px solid var(--platea-borde);
-  background: var(--platea-superficie);
+  border-bottom: 1px solid rgba(127, 127, 127, 0.3);
+  background: var(--platea-cabecera);
   color: var(--platea-gris-oscuro);
   font-size: 22px;
   cursor: pointer;
@@ -91,21 +112,18 @@ $top-barra: calc(var(--offset-top, 0px) + #{$hueco});
 .buscador {
   position: relative;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 6px;
-  width: min(280px, calc(100vw - 2 * #{$hueco}));
-  height: $tam-boton;
+  width: min(280px, calc(100vw - #{$tam-boton} - 4 * #{$hueco}));
   padding: 0 6px 0 12px;
   box-sizing: border-box;
-  background: var(--platea-superficie);
   color: var(--platea-texto-suave);
-  border-radius: 10px;
-  box-shadow: var(--platea-sombra);
 
   input {
     flex: 1;
     min-width: 0;
-    height: 100%;
+    height: $tam-boton;
     border: none;
     outline: none;
     background: transparent;
@@ -124,6 +142,8 @@ $top-barra: calc(var(--offset-top, 0px) + #{$hueco});
 
   &:focus-within {
     outline: 2px solid var(--platea-azul-logo);
+    outline-offset: -2px;
+    border-radius: 10px;
   }
 }
 
@@ -137,17 +157,12 @@ $top-barra: calc(var(--offset-top, 0px) + #{$hueco});
 }
 
 .resultados-busqueda {
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  z-index: 2;
-  margin: 0;
+  flex-basis: 100%;
+  margin: 0 0 0 -12px;
+  margin-right: -6px;
   padding: 4px 0;
   list-style: none;
-  background: var(--platea-superficie);
-  border-radius: 10px;
-  box-shadow: var(--platea-sombra);
+  border-top: 1px solid var(--platea-borde);
   max-height: 50vh;
   overflow-y: auto;
 
@@ -176,18 +191,18 @@ $top-barra: calc(var(--offset-top, 0px) + #{$hueco});
 
 /* =========================
    PANELES
-   Se abren a la derecha de la columna de botones
+   Se abren a la izquierda de la columna de botones
    ========================= */
 
 .panel {
   position: absolute;
-  top: calc(var(--offset-top, 0px) + #{$hueco} + #{$tam-boton} + #{$hueco});
-  left: calc(#{$hueco} * 2 + #{$tam-boton} + var(--ion-safe-area-left, 0px));
+  top: $top-barra;
+  right: calc(#{$hueco} * 2 + #{$tam-boton} + var(--ion-safe-area-right, 0px));
   z-index: 1001;
   width: fit-content;
   min-width: 200px;
   max-width: calc(100vw - #{$tam-boton} - 4 * #{$hueco});
-  max-height: calc(100% - var(--offset-top, 0px) - #{$tam-boton} - 4 * #{$hueco} - var(--ion-safe-area-bottom, 0px));
+  max-height: calc(100% - var(--offset-top, 0px) - 3 * #{$hueco} - var(--ion-safe-area-bottom, 0px));
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -303,7 +318,7 @@ $top-barra: calc(var(--offset-top, 0px) + #{$hueco});
 .leyendas {
   position: absolute;
   bottom: calc(25px + var(--ion-safe-area-bottom, 0px));
-  right: 5px;
+  left: calc(#{$hueco} + var(--ion-safe-area-left, 0px));
   z-index: 1;
   display: flex;
   flex-direction: column;

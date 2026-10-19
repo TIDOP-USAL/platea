@@ -5,11 +5,13 @@ import * as turf from '@turf/turf';
 export type TipoMedicion = 'linea' | 'area';
 
 const SOURCE_MEDICION = 'medicion';
+const TOLERANCIA_PX = 15;  // distancia en pantalla para considerar que se pulsa un vértice
 
 /**
  * Herramienta de medición sobre el mapa: distancia en línea recta (polilínea)
  * o superficie (polígono). Cada clic añade un vértice y el resultado se
- * recalcula al momento; "terminar" congela la medida y "borrar" la quita.
+ * recalcula al momento. Se termina volviendo a pulsar el último punto (o el
+ * primero, para cerrar un área); "borrar" quita la medida.
  */
 @Injectable({ providedIn: 'root' })
 export class MedicionService {
@@ -23,6 +25,11 @@ export class MedicionService {
   private onClick = (e: maplibregl.MapMouseEvent) => this.añadirPunto(e);
   private onMove = (e: maplibregl.MapMouseEvent) => {
     this.cursor = [e.lngLat.lng, e.lngLat.lat];
+    this.dibujar();
+  };
+  // Al salir del mapa (p. ej. hacia los botones) la línea deja de seguir al ratón
+  private onOut = () => {
+    this.cursor = null;
     this.dibujar();
   };
 
@@ -41,6 +48,7 @@ export class MedicionService {
     map.getCanvas().style.cursor = 'crosshair';
     map.on('click', this.onClick);
     map.on('mousemove', this.onMove);
+    map.on('mouseout', this.onOut);
     this.asegurarCapas();
   }
 
@@ -51,6 +59,7 @@ export class MedicionService {
     this.cursor = null;
     this.map.off('click', this.onClick);
     this.map.off('mousemove', this.onMove);
+    this.map.off('mouseout', this.onOut);
     this.map.getCanvas().style.cursor = '';
     // Se reactiva tras el clic en curso para que un doble clic no haga zoom
     setTimeout(() => this.map?.doubleClickZoom.enable(), 300);
@@ -74,9 +83,24 @@ export class MedicionService {
     }
   }
 
+  /** Añade un vértice, o termina si se pulsa sobre el último (o el primero en un área) */
   private añadirPunto(e: maplibregl.MapMouseEvent) {
+    const minimo = this.tipo === 'area' ? 3 : 2;
+    if (this.puntos.length >= minimo) {
+      const ultimo = this.puntos[this.puntos.length - 1];
+      const candidatos = this.tipo === 'area' ? [ultimo, this.puntos[0]] : [ultimo];
+      if (candidatos.some(p => this.cercaEnPantalla(p, e.point))) {
+        this.terminar();
+        return;
+      }
+    }
     this.puntos.push([e.lngLat.lng, e.lngLat.lat]);
     this.dibujar();
+  }
+
+  private cercaEnPantalla(punto: [number, number], pixel: maplibregl.Point): boolean {
+    const p = this.map!.project(punto);
+    return Math.hypot(p.x - pixel.x, p.y - pixel.y) <= TOLERANCIA_PX;
   }
 
   private asegurarCapas() {

@@ -21,9 +21,16 @@
 </head>
 
 <body>
-  
+  <script>
+    // Aplica el modo oscuro guardado antes de pintar la pantalla de carga
+    try {
+      if (localStorage.getItem('platea-modo-oscuro') === '1') document.body.classList.add('dark');
+    } catch (e) { }
+  </script>
+
   <div id="app-loader">
-    <div class="loader-logo">PLATEA</div>
+    <img class="loader-logo logo-claro" src="assets/img/logo_platea_transparente.png" alt="PLATEA - Diputación de Ávila">
+    <img class="loader-logo logo-oscuro" src="assets/img/logo_platea_oscuro.png" alt="PLATEA - Diputación de Ávila">
     <div class="loader-tagline">CARGANDO</div>
     <div class="loader-spinner"></div>
   </div>
@@ -33,7 +40,7 @@
     #app-loader {
       position: fixed;
       inset: 0;
-      background: #0f0f1a;
+      background: #eceef1;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -42,24 +49,38 @@
       transition: opacity 0.4s ease;
     }
 
+    body.dark #app-loader {
+      background: #3f3f3f;
+    }
+
+    body.dark .loader-tagline {
+      color: #d9d9d9;
+    }
+
+    #app-loader .logo-oscuro,
+    body.dark #app-loader .logo-claro {
+      display: none;
+    }
+
+    body.dark #app-loader .logo-oscuro {
+      display: block;
+    }
+
     #app-loader.hidden {
       opacity: 0;
       pointer-events: none;
     }
 
     .loader-logo {
-      font-size: 36px;
-      font-weight: 500;
-      letter-spacing: 6px;
-      color: #ffffff;
-      text-transform: uppercase;
-      margin-bottom: 10px;
+      width: min(280px, 70vw);
+      height: auto;
+      margin-bottom: 24px;
     }
 
     .loader-tagline {
       font-size: 11px;
       letter-spacing: 3px;
-      color: #7a6a4a;
+      color: #3f3f3f;
       text-transform: uppercase;
       margin-bottom: 48px;
     }
@@ -67,10 +88,16 @@
     .loader-spinner {
       width: 40px;
       height: 40px;
-      border: 2px solid rgba(232, 213, 163, 0.15);
-      border-top-color: #e8d5a3;
+      border: 3px solid rgba(30, 143, 232, 0.2);
+      border-top-color: #1e8fe8;
       border-radius: 50%;
       animation: spin 0.9s linear infinite;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .loader-spinner {
+        animation-duration: 2.5s;
+      }
     }
 
     @keyframes spin {

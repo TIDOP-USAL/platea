@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';  // ← de Angular
 import { FormsModule } from '@angular/forms';
-import { IonListHeader, IonModal, IonIcon, IonLabel, IonCheckbox, IonHeader, IonToolbar, IonTitle, IonList, IonRadioGroup, IonRadio, IonItem, IonContent } from '@ionic/angular/standalone';
+import { IonListHeader, IonModal, IonIcon, IonLabel, IonCheckbox, IonHeader, IonToolbar, IonList, IonRadioGroup, IonRadio, IonItem, IonContent } from '@ionic/angular/standalone';
 
 import { add, remove, scanOutline, informationCircleOutline, layersOutline, ellipsisHorizontal,
    searchOutline, resizeOutline, squareOutline, settingsOutline, mapOutline } from 'ionicons/icons';
@@ -27,7 +27,7 @@ import { MedicionService, TipoMedicion } from '../services/medicion';
 import { BuscadorMunicipiosService, Municipio } from '../services/buscador-municipios';
 import { ExportarPdfService, ElementoLeyenda } from '../services/exportar-pdf';
 
-type Panel = 'capas' | 'diputacion' | 'offline' | 'online' | 'mas' | 'terrenos' | 'ajustes';
+type Panel = 'buscar' | 'capas' | 'diputacion' | 'offline' | 'online' | 'mas' | 'terrenos' | 'ajustes';
 
 /**
  * Extensión del botón de vista global [oeste, sur, este, norte].
@@ -47,7 +47,7 @@ addIcons({
   selector: 'app-home',
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
-  imports: [CommonModule, FormsModule, IonListHeader, IonModal, IonIcon, IonLabel, IonCheckbox, IonHeader, IonToolbar, IonTitle, IonList, IonRadioGroup, IonRadio, IonItem, IonContent],
+  imports: [CommonModule, FormsModule, IonListHeader, IonModal, IonIcon, IonLabel, IonCheckbox, IonHeader, IonToolbar, IonList, IonRadioGroup, IonRadio, IonItem, IonContent],
 })
 export class HomePage implements OnInit {
   panel: Panel | null = null;
@@ -67,7 +67,8 @@ export class HomePage implements OnInit {
   leyendasInforme = false;
   emergencia: Emergencia;
   resultadosEmergencia: ResultadosEmergencia | null = null;
-  esModoOscuro = false;
+  // El index.html ya ha aplicado el modo oscuro guardado antes de arrancar
+  esModoOscuro = document.body.classList.contains('dark');
 
   // Botón de información: los popups solo se abren con este modo activo
   modoInfo = false;
@@ -82,6 +83,9 @@ export class HomePage implements OnInit {
  toggleDarkMode() {
     this.esModoOscuro = !this.esModoOscuro;
     document.body.classList.toggle('dark', this.esModoOscuro);
+    try {
+      localStorage.setItem('platea-modo-oscuro', this.esModoOscuro ? '1' : '0');
+    } catch { /* sin almacenamiento: solo dura esta sesión */ }
   }
   constructor(public mapa: MapaService,
     private modalCtrl: ModalController,
@@ -219,6 +223,10 @@ export class HomePage implements OnInit {
   /** Abre un panel de la barra, o lo cierra si ya estaba abierto */
   togglePanel(panel: Panel) {
     this.panel = this.panel === panel ? null : panel;
+    if (this.panel === 'buscar') {
+      // El input se crea al abrir el panel; se enfoca en el siguiente ciclo
+      setTimeout(() => document.querySelector<HTMLInputElement>('.buscador input')?.focus());
+    }
   }
 
   cerrarPaneles() {

@@ -1,8 +1,9 @@
 <ion-header [translucent]="true">
   <ion-toolbar class="cabecera">
-    <ion-title>
-      <img src="./assets/img/logo_platea.png" alt="PLATEA - Diputación de Ávila" width="150" height="50" style="margin:auto;">
-    </ion-title>
+    <div slot="start" class="logo-cabecera">
+      <img class="logo-claro" src="./assets/img/logo_platea_transparente.png" alt="PLATEA - Diputación de Ávila" width="186" height="60">
+      <img class="logo-oscuro" src="./assets/img/logo_platea_oscuro.png" alt="PLATEA - Diputación de Ávila" width="186" height="60">
+    </div>
   </ion-toolbar>
 </ion-header>
 
@@ -11,30 +12,9 @@
   <div id="map" style="height: 100%;"></div>
 
   <!-- =========================
-       BARRA DE HERRAMIENTAS (lado izquierdo)
+       BARRA DE HERRAMIENTAS (lado derecho)
        ========================= -->
   <div class="barra-herramientas">
-
-    <div class="buscador" role="search">
-      <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
-      <input type="search" placeholder="Buscar municipio" aria-label="Buscar municipio"
-        [(ngModel)]="textoBusqueda" (ngModelChange)="buscarMunicipio()" (keydown.enter)="irAPrimerResultado()"
-        (keydown.escape)="limpiarBusqueda()">
-      @if (textoBusqueda) {
-      <button type="button" class="btn-limpiar" (click)="limpiarBusqueda()" aria-label="Borrar búsqueda">
-        <ion-icon name="close"></ion-icon>
-      </button>
-      }
-      @if (mostrarResultados) {
-      <ul class="resultados-busqueda">
-        @for (m of resultadosBusqueda; track m.nombre) {
-        <li><button type="button" (click)="irAMunicipio(m)">{{ m.nombre }}</button></li>
-        } @empty {
-        <li class="sin-resultados">{{ errorBusqueda || 'Sin resultados' }}</li>
-        }
-      </ul>
-      }
-    </div>
 
     <div class="botones">
       <button type="button" class="btn-herramienta" (click)="mapa.map?.zoomIn()" title="Acercar" aria-label="Acercar">
@@ -58,6 +38,10 @@
         title="Emergencia" aria-label="Emergencia">
         <ion-icon name="alert-circle-outline"></ion-icon>
       </button>
+      <button type="button" class="btn-herramienta" [class.activo]="panel === 'buscar'" (click)="togglePanel('buscar')"
+        title="Buscar municipio" aria-label="Buscar municipio" [attr.aria-expanded]="panel === 'buscar'">
+        <ion-icon name="search-outline"></ion-icon>
+      </button>
       @if (mostrarLimpiarEmergencias) {
       <button type="button" class="btn-herramienta" (click)="limpiarCapasEmergencia()"
         title="Quitar emergencia del mapa" aria-label="Quitar emergencia del mapa">
@@ -73,12 +57,35 @@
   </div>
 
   <!-- =========================
-       PANELES (se abren a la derecha de la barra)
+       PANELES (se abren a la izquierda de la barra)
        ========================= -->
   @if (panel) {
   <div class="panel" [class.panel-menu]="panel === 'capas' || panel === 'mas'">
 
     @switch (panel) {
+    @case ('buscar') {
+    <div class="buscador" role="search">
+      <ion-icon name="search-outline" aria-hidden="true"></ion-icon>
+      <input type="search" placeholder="Buscar municipio" aria-label="Buscar municipio"
+        [(ngModel)]="textoBusqueda" (ngModelChange)="buscarMunicipio()" (keydown.enter)="irAPrimerResultado()"
+        (keydown.escape)="limpiarBusqueda()">
+      @if (textoBusqueda) {
+      <button type="button" class="btn-limpiar" (click)="limpiarBusqueda()" aria-label="Borrar búsqueda">
+        <ion-icon name="close"></ion-icon>
+      </button>
+      }
+      @if (mostrarResultados) {
+      <ul class="resultados-busqueda">
+        @for (m of resultadosBusqueda; track m.nombre) {
+        <li><button type="button" (click)="irAMunicipio(m)">{{ m.nombre }}</button></li>
+        } @empty {
+        <li class="sin-resultados">{{ errorBusqueda || 'Sin resultados' }}</li>
+        }
+      </ul>
+      }
+    </div>
+    }
+
     @case ('capas') {
     <button type="button" class="opcion-menu" (click)="togglePanel('diputacion')">
       <ion-icon name="albums"></ion-icon>Capas Diputación
@@ -372,12 +379,11 @@
     <span>
       {{ medicion.tipo === 'linea' ? 'Distancia' : 'Área' }}: <strong>{{ medicion.resultado }}</strong>
       @if (medicion.activa) {
-      <small>Pulsa en el mapa para añadir puntos</small>
+      <small>{{ medicion.puntos.length < (medicion.tipo === 'area' ? 3 : 2)
+        ? 'Pulsa en el mapa para añadir puntos'
+        : 'Pulsa de nuevo el último punto para terminar' }}</small>
       }
     </span>
-    @if (medicion.activa) {
-    <button type="button" (click)="medicion.terminar()">Terminar</button>
-    }
     <button type="button" (click)="medicion.borrar()">Borrar</button>
   </div>
   } @else if (modoInfo) {
