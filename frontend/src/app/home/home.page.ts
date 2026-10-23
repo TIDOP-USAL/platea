@@ -3,14 +3,14 @@ import { CommonModule } from '@angular/common';  // ← de Angular
 import { FormsModule } from '@angular/forms';
 import { IonListHeader, IonModal, IonButton, IonButtons, IonIcon, IonLabel, IonCheckbox, IonHeader, IonToolbar, IonTitle, IonList, IonRadioGroup, IonRadio, IonItem, IonContent } from '@ionic/angular/standalone';
 
-import { addIcons } from 'ionicons';
 import { closeCircleOutline, locationOutline, documentTextOutline, saveOutline,
    closeOutline, navigateOutline, documentOutline, alertCircleOutline, 
-   constructOutline, cloudUpload, chevronUpOutline, chevronDownOutline, 
+   cloudUpload, chevronUpOutline, chevronDownOutline, 
    globe, albums, close, download, 
    flash, syncOutline} from 'ionicons/icons';
 import { ModalController } from '@ionic/angular/standalone';
-
+import { addIcons } from 'ionicons';
+import { constructOutline, sunnyOutline, moonOutline } from 'ionicons/icons';
 import { MapaService } from '../services/mapa-service';
 import { CapasDiputacion } from '../services/capas-diputacion';
 import { CapasOffline } from '../services/capas-offline';
@@ -23,6 +23,11 @@ import { ActualizarCapasComponent } from '../components/actualizar-capas/actuali
 import { Capacitor } from '@capacitor/core';
 //import { IonButtons } from '@ionic/angular';
 //import { IonImg } from '@ionic/angular';
+addIcons({
+  'construct-outline': constructOutline,
+  'sunny-outline': sunnyOutline,
+  'moon-outline': moonOutline
+});
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
@@ -51,7 +56,12 @@ export class HomePage implements OnInit {
   leyendasInforme = false;
   emergencia: Emergencia;
   resultadosEmergencia: ResultadosEmergencia | null = null;
+  esModoOscuro = false;
 
+ toggleDarkMode() {
+    this.esModoOscuro = !this.esModoOscuro;
+    document.body.classList.toggle('dark', this.esModoOscuro);
+  }
   constructor(public mapa: MapaService,
     private modalCtrl: ModalController,
     public capasDiputacion: CapasDiputacion,

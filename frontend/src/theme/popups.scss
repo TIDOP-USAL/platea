@@ -1,8 +1,12 @@
+/* =========================
+   ESTILOS BASE DEL POPUP (MODO CLARO POR DEFECTO)
+   ========================= */
+
 .popup-card {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 0; 
+  padding: 0;
 }
 
 .popup-title {
@@ -11,10 +15,10 @@
   gap: 8px;
   font-size: 1.15rem;
   font-weight: 700;
-  color: #ffffff;
-  border-bottom: 1px solid #27272a;
+  color: #18181b; /* Color oscuro por defecto para modo claro */
+  border-bottom: 1px solid #e4e4e7;
   padding-bottom: 10px;
-  padding-right: 30px; 
+  padding-right: 30px;
 }
 
 .popup-img {
@@ -22,24 +26,23 @@
   max-height: 220px;
   object-fit: cover;
   border-radius: 10px;
-  border: 1px solid #3f3f46;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  border: 1px solid #d4d4d8;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .popup-info {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  background-color: #27272a;
   padding: 12px 14px;
   border-radius: 10px;
-  border: 1px solid #3f3f46;
+  border: 1px solid #d4d4d8;
+  background-color: #f9f9fb;
 }
 
 .modal-sin-toolbar {
   position: relative;
-  background: #18181b;
-  color: #f4f4f5;
+  color: #27272a; /* Texto oscuro por defecto */
   padding: 16px;
   width: 100%;
   box-sizing: border-box;
@@ -49,39 +52,23 @@
 
   .btn-cerrar-drch {
     position: absolute;
-    top: 14px;          
+    top: 14px;
     right: 14px;
     z-index: 10;
-    margin: 0;
-    padding: 0;
-    height: 28px;
     width: 28px;
-    background: transparent !important; 
-    box-shadow: none !important;       
+    height: 28px;
+    background: transparent !important;
     --background: transparent;
-    --box-shadow: none;
-    --color: #a1a1aa;
-    color: #a1a1aa;
+    --color: #71717a;
+    color: #71717a;
     border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     cursor: pointer;
-
-    ion-icon {
-      font-size: 22px;
-    }
+    font-size: 20px;
 
     &:hover {
-      --color: #ffffff;
-      color: #ffffff;
-      background: transparent !important;
+      --color: #000000;
+      color: #000000;
     }
-  }
-
-  .modal-body {
-    margin-top: 0; 
-    width: 100%;
   }
 }
 
@@ -94,18 +81,18 @@
   padding: 2px 0;
 
   &:not(:last-child) {
-    border-bottom: 1px dotted rgba(255, 255, 255, 0.1);
+    border-bottom: 1px dotted rgba(0, 0, 0, 0.1);
     padding-bottom: 6px;
   }
 
   .label {
     font-weight: 500;
     flex-shrink: 0;
-    color: #a1a1aa;
+    color: #71717a; /* Gris para modo claro */
   }
 
   .value {
-    color: #f4f4f5;
+    color: #27272a; /* Texto oscuro por defecto */
     font-weight: 600;
     text-align: right;
     word-break: break-word;
@@ -116,7 +103,6 @@
       padding: 2px 8px;
       border-radius: 6px;
       font-size: 0.78rem;
-      letter-spacing: 0.4px;
     }
   }
 }
@@ -133,20 +119,12 @@
   font-size: 0.9rem;
   padding: 10px 14px;
   border-radius: 8px;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 10px rgba(29, 85, 36, 0.521);
+  box-shadow: 0 4px 10px rgba(29, 85, 36, 0.2);
   margin-top: 4px;
 
-  &:hover,
-  &:active {
+  &:hover {
     background-color: #07611b;
   }
-}
-
-.popup-empty {
-  text-align: center;
-  font-style: italic;
-  padding: 16px 0;
 }
 
 ion-modal.modal-info.modal-redondo {
@@ -156,8 +134,58 @@ ion-modal.modal-info.modal-redondo {
   --min-height: 180px;
   --max-height: 85vh;
   --border-radius: 20px;
-  --box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
-  --background: #18181b;
-
+  --box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+  --background: #ffffff; /* Fondo blanco por defecto */
   margin: auto;
+}
+
+
+/* =========================
+   ADAPTACIÓN CUANDO EL BODY TIENE LA CLASE .DARK (MODO OSCURO)
+   ========================= */
+
+body.dark {
+  ion-modal.modal-info.modal-redondo {
+    --background: #18181b !important;
+  }
+
+  .modal-sin-toolbar {
+    color: #f4f4f5 !important;
+
+    .btn-cerrar-drch {
+      --color: #a1a1aa !important;
+      color: #a1a1aa !important;
+      &:hover {
+        --color: #ffffff !important;
+        color: #ffffff !important;
+      }
+    }
+  }
+
+  .popup-title {
+    color: #ffffff !important;
+    border-bottom: 1px solid #27272a !important;
+  }
+
+  .popup-img {
+    border: 1px solid #3f3f46 !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  .popup-info {
+    border: 1px solid #3f3f46 !important;
+    background-color: transparent !important;
+  }
+
+  .popup-row {
+    &:not(:last-child) {
+      border-bottom: 1px dotted rgba(255, 255, 255, 0.1) !important;
+    }
+    .label {
+      color: #a1a1aa !important;
+    }
+    .value {
+      color: #f4f4f5 !important;
+    }
+  }
 }

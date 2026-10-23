@@ -459,67 +459,232 @@ export class EmergenciaService {
     });
 
     // ── Popups en click ──
-    this.añadirPopup(map, 'emergencia-punto-layer', (p) =>
-      `<h2>Punto de Emergencia</h2><br><b>🚨 ${p.nombre}</b><br>
-        Tipo: ${p.tipo}<br>
-        Coordenadas: ${p.coordEste} ${p.coordNorte}<br>
-        Usuario: ${p.usuario}<br>
-        Distancia medios: ${p.distanciaMedios}<br>
-        Distancia hidrantes: ${p.distanciaHidrantes}<br>
-        Notas: ${p.notas}<br>`
-    );
-    this.añadirPopup(map, 'emergencia-parques-layer', (p) =>
-      `<h2>Emergencias Parques</h2><br><b>🚒 ${p.nombre}</b><br>Tipo: ${p.tipo}<br>Distancia linea recta: ${p.distancia} km<br>Distancia ruta: ${p.distanciaRuta} km<br>Teléfono: ${p.tlf}`
-    );
-    this.añadirPopup(map, 'emergencia-inventario-layer', (p) =>
-      `<h2>Emergencias Inventario</h2><br><b>👥 ${p.nombre}</b><br><b>Bomberos Voluntarios:</b> ${p.num_bomb_vol} · <b>Bomberos Proteccion:</b> ${p.num_bomb_pc}<br><b>Distancia linea recta:</b> ${p.distancia} km<br>
-      <b>Distancia ruta:</b> ${p.distanciaRuta} km<br>  
-      <b>Contacto:</b> ${p.contact || '—'} <br>
-      <b>Fecha actualizacion:</b> ${p.date || '—'}<br>
-      <b>Nº mangueras:</b> ${p.num_maguera || '—'}<br>
-      <b>Nº mangueras 25 mm:</b> ${p.mangaje25 || '—'}<br>
-      <b>Nº mangueras 45 mm:</b> ${p.mangaje45 || '—'}<br>
-      <b>Nº mangueras 70 mm:</b> ${p.mangaje70 || '—'}<br>
-      <b>Capacidad agua autobomba (m³):</b> ${p.cap_agua_autobomba || '—'}<br>
-      <b>Antigüedad autobomba (años):</b> ${p.years_automba || '—'}<br>
-      <b>Notas autobomba:</b> ${p.autobomba_notes || '—'}<br>
-      <b>Tipo autobomba:</b> ${p.autobomba_tipo || '—'}<br>
-      
-      `
-    );
-    this.añadirPopup(map, 'emergencia-hidrantes-layer', (p) =>{
-      let html = `<h2>Hidrantes</h2>
-        <b>💧 Hidrante ${p.id}</b><br>`;
-        if (p?.['hydrant_type']) {
-          html += "<b>Tipo:</b> " + p?.['hydrant_type'] + "<br>";
-        } else {
-          html += "<b>Tipo:</b> " + 'No indicado' + "<br>";
-        }
-        if (p?.['connector_type']) {
-          html += "<b>Conector:</b> " + p?.['connector_type'] + "<br>";
-        } else {
-          html += "<b>Conector:</b> " + 'No indicado' + "<br>";
-        }
-        html += `
-        <b>Distancia linea recta:</b> ${p.distancia} km<br>
-        <b>Distancia ruta:</b> ${p.distanciaRuta} km<br>
-        <b>Latitud:</b> ${p.lat}<br>
-        <b>Longitud:</b> ${p.lon}<br>
-        <b>Origen Datos:</b> ${p.source}<br>
-        <b>Fecha:</b> ${p.date}<br>
-
+  // 1. Punto de Emergencia
+    this.añadirPopup(map, 'emergencia-punto-layer', (p) => {
+      if (!p) return '<p class="popup-empty">Sin información disponible</p>';
+      return `
+        <div class="popup-card">
+          <div class="popup-title">
+            <span>🚨</span> <span>${p.nombre || 'Punto de Emergencia'}</span>
+          </div>
+          <div class="popup-info">
+            <div class="popup-row">
+              <span class="label">Tipo</span>
+              <span class="value badge">${p.tipo || 'No indicado'}</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Coordenadas</span>
+              <span class="value">${p.coordEste ?? '—'}, ${p.coordNorte ?? '—'}</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Usuario</span>
+              <span class="value">${p.usuario || '—'}</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Distancia medios</span>
+              <span class="value">${p.distanciaMedios ?? '—'} km</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Distancia hidrantes</span>
+              <span class="value">${p.distanciaHidrantes ?? '—'} km</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Notas</span>
+              <span class="value">${p.notas || 'Sin notas'}</span>
+            </div>
+          </div>
+        </div>
       `;
-      const pathPhoto = p.path_photo;
-      if (pathPhoto && pathPhoto.split('foto_hidrantes/')[1]?.trim() !== '') {
-        const src = urlFotoHidrante(pathPhoto);
-        html += `<b>Foto:</b><br><img src="${src}" style="max-width:200px; margin-top:4px;"><br>`;
+    });
+
+    // 2. Parques de Extinción
+    this.añadirPopup(map, 'emergencia-parques-layer', (p) => {
+      if (!p) return '<p class="popup-empty">Sin información disponible</p>';
+      return `
+        <div class="popup-card">
+          <div class="popup-title">
+            <span>🚒</span> <span>${p.nombre || 'Parque de Extinción'}</span>
+          </div>
+          <div class="popup-info">
+            <div class="popup-row">
+              <span class="label">Tipo</span>
+              <span class="value badge">${p.tipo || 'No indicado'}</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Línea recta</span>
+              <span class="value">${p.distancia ?? '—'} km</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Distancia ruta</span>
+              <span class="value">${p.distanciaRuta ?? '—'} km</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Teléfono</span>
+              <span class="value">${p.tlf ? `<a href="tel:${p.tlf}">${p.tlf}</a>` : '—'}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+
+    // 3. Inventario / Recursos Humanos
+    this.añadirPopup(map, 'emergencia-inventario-layer', (p) => {
+      if (!p) return '<p class="popup-empty">Sin información disponible</p>';
+      return `
+        <div class="popup-card">
+          <div class="popup-title">
+            <span>👥</span> <span>${p.nombre || 'Recurso / Inventario'}</span>
+          </div>
+          <div class="popup-info">
+            <div class="popup-row">
+              <span class="label">Bomberos Voluntarios</span>
+              <span class="value badge">${p.num_bomb_vol ?? 0}</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Bomberos Protección</span>
+              <span class="value badge">${p.num_bomb_pc ?? 0}</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Línea recta</span>
+              <span class="value">${p.distancia ?? '—'} km</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Distancia ruta</span>
+              <span class="value">${p.distanciaRuta ?? '—'} km</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Contacto</span>
+              <span class="value">${p.contact || '—'}</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Fecha actualización</span>
+              <span class="value">${p.date || '—'}</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Nº Mangueras</span>
+              <span class="value">${p.num_maguera || '—'}</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Mangueras 25 mm</span>
+              <span class="value">${p.mangaje25 || '—'}</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Mangueras 45 mm</span>
+              <span class="value">${p.mangaje45 || '—'}</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Mangueras 70 mm</span>
+              <span class="value">${p.mangaje70 || '—'}</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Capacidad agua (m³)</span>
+              <span class="value">${p.cap_agua_autobomba || '—'}</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Antigüedad autobomba</span>
+              <span class="value">${p.years_automba ? p.years_automba + ' años' : '—'}</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Tipo autobomba</span>
+              <span class="value">${p.autobomba_tipo || '—'}</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Notas autobomba</span>
+              <span class="value">${p.autobomba_notes || '—'}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    });
+ this.añadirPopup(map, 'emergencia-hidrantes-layer', (p) => {
+      if (!p) return '<p class="popup-empty">Sin información disponible</p>';
+
+      const id = p.id ?? 'N/D';
+      const lat = p.lat ?? 'N/D';
+      const long = p.lon ?? p.long ?? 'N/D'; // Compatible con lon o long
+      const origen = p.source ?? 'N/D';
+      const fecha = p.date ?? 'N/D';
+      const urlMaps = p.url_google_maps;
+
+      // Mapeo Tipo de Conector
+      const mapaTipoConector: Record<string | number, string> = {
+        1: 'Racor Barcelona',
+        2: 'Racor Madrid',
+        3: 'Racor rosca 40 mm'
+      };
+      const rawConector = p.connector_type ?? p.tipo_conector;
+      const tipoConector = (rawConector !== null && rawConector !== undefined && mapaTipoConector[rawConector]) 
+        ? mapaTipoConector[rawConector] 
+        : 'No indicado';
+
+      // Mapeo Tipo de Hidrante
+      const mapaTipoHidrante: Record<string | number, string> = {
+        1: 'Hidrante de columna',
+        2: 'Hidrante de arqueta',
+        3: 'Embalse'
+      };
+      const rawHidrante = p.hydrant_type ?? p.tipo_hidrante;
+      const tipoHidrante = (rawHidrante !== null && rawHidrante !== undefined && mapaTipoHidrante[rawHidrante]) 
+        ? mapaTipoHidrante[rawHidrante] 
+        : 'No indicado';
+
+      // Lógica de foto con manejo de rutas flexible
+      let fotoHtml = '';
+      let pathPhoto: string = p.path_photo || '';
+      if (pathPhoto.trim() !== '') {
+        pathPhoto = pathPhoto.replace(/\\/g, '/');
+        const nombreArchivo = pathPhoto.split('/').pop();
+        if (nombreArchivo && nombreArchivo.trim() !== '' && pathPhoto.split('foto_hidrantes/')[1]?.trim() !== '') {
+          const src = urlFotoHidrante(pathPhoto);
+          fotoHtml = `<img src="${src}" alt="Foto Hidrante ${id}" class="popup-img" onerror="this.style.display='none'" />`;
+        }
       }
 
-      html += `<b>URL Google Maps:</b> <a href="${p.url_google_maps}" target="_blank">Enlace</a><br>`;
-
-      return html;
-   });
-
+      // Estructura HTML idéntica a datosHidrantes
+      return `
+        <div class="popup-card">
+          <div class="popup-title">
+            <span>🧯</span> <span>Hidrante #${id}</span>
+          </div>
+          ${fotoHtml}
+          <div class="popup-info">
+            <div class="popup-row">
+              <span class="label">Tipo Conector</span>
+              <span class="value badge">${tipoConector}</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Tipo Hidrante</span>
+              <span class="value badge">${tipoHidrante}</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Coordenadas</span>
+              <span class="value">${lat}, ${long}</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Origen Datos</span>
+              <span class="value">${origen}</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Fecha</span>
+              <span class="value">${fecha}</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Distancia línea recta</span>
+              <span class="value">${p.distancia} km</span>
+            </div>
+            <div class="popup-row">
+              <span class="label">Distancia ruta</span>
+              <span class="value">${p.distanciaRuta} km</span>
+            </div>
+          </div>
+          ${urlMaps ? `
+            <a href="${urlMaps}" target="_blank" rel="noopener noreferrer" class="popup-btn">
+              <span>Ver en Google Maps</span> ↗
+            </a>
+          ` : ''}
+        </div>
+      `;
+    });
     // Guarda los ids para limpiar luego
     this.capasEmergenciaActiva = [
       'emergencia-punto-layer',

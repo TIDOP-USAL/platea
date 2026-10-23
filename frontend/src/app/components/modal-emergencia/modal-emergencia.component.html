@@ -15,8 +15,8 @@
 <ion-content class="ion-padding dialog-blanco">
   @if (vista === 'formulario') {
   <!-- SECCIÓN 1: Geolocalización -->
-  <ion-list style="color:blue" class="dialog-list-blanco">
-    <ion-list-header (click)="toggleSeccion('geo')" style="cursor:pointer; background: #f0f0f0; color:black; border-radius: 6px; margin-bottom: 4px;">
+  <ion-list class="dialog-list-blanco">
+    <ion-list-header (click)="toggleSeccion('geo')" class="header-acordeon">
       <ion-icon name="location-outline" style="margin-right:8px; color:#e63946;"></ion-icon>
       <ion-label><strong>Geolocalización de la emergencias</strong></ion-label>
       <ion-icon [name]="seccionesAbiertas['geo'] ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
@@ -55,8 +55,8 @@
   </ion-list>
   
   <!-- SECCIÓN 2: Registro y parámetros -->
-  <ion-list style="margin-top: 8px;"  class="dialog-list-blanco">
-    <ion-list-header (click)="toggleSeccion('params')" style="cursor:pointer; background: #f0f0f0; color:black; border-radius: 6px; margin-bottom: 4px;">
+  <ion-list style="margin-top: 8px;" class="dialog-list-blanco">
+    <ion-list-header (click)="toggleSeccion('params')" class="header-acordeon">
       <ion-icon name="document-text-outline" style="margin-right:8px; color:#e63946;"></ion-icon>
       <ion-label><strong>Registro y parámetros de la emergencia</strong></ion-label>
       <ion-icon [name]="seccionesAbiertas['params'] ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
@@ -87,7 +87,7 @@
           <ion-select-option value="incendio_no_urbano">Incendio forestal</ion-select-option>
           <ion-select-option value="incendio_urbano">Incendio Urbano</ion-select-option>
           <ion-select-option value="inundacion">Inundación</ion-select-option>
-          <ion-select-option value="mercancias_peligrosas">Mercancias Peligrosas</ion-select-option>          
+          <ion-select-option value="mercancias_peligrosas">Mercancias Peligrosas</ion-select-option>         
           <ion-select-option value="riesgo_quimico">Riesgo Quimico</ion-select-option>
         </ion-select>
       </ion-item>
@@ -120,52 +120,24 @@
     }
   </ion-list>
 
-  <!-- SECCIÓN 3: Archivo de salida -->
-   <!--
-  <ion-list style="margin-top: 8px;">
-    <ion-list-header (click)="toggleSeccion('archivo')" style="cursor:pointer; background: #f0f0f0; border-radius: 6px; margin-bottom: 4px;">
-      <ion-icon name="save-outline" style="margin-right:8px; color:#e63946;"></ion-icon>
-      <ion-label><strong>Archivo de salida</strong></ion-label>
-      <ion-icon [name]="seccionesAbiertas['archivo'] ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-    </ion-list-header>
-
-    @if (seccionesAbiertas['archivo']) {
-      <ion-item>
-        <ion-label position="stacked">Nombre del informe</ion-label>
-        <ion-input
-          [value]="emergenciaService.emergencia.nombreInforme"
-          (ionInput)="emergenciaService.emergencia.nombreInforme = $event.detail.value!"  
-          placeholder="informe_emergencia.pdf">
-        </ion-input>
-      </ion-item>
-      <ion-item>
-        <ion-checkbox
-          [checked]="emergenciaService.emergencia.abrirAlTerminar"
-          (ionChange)="emergenciaService.emergencia.abrirAlTerminar = $event.detail.checked">
-          <ion-label>Abrir informe al terminar</ion-label>
-        </ion-checkbox>
-      </ion-item>
-    }
-  </ion-list>
-  -->
-
   <!-- Botones -->
   <div style="display:flex; gap:8px; margin-top:16px; padding-bottom:16px;">
     <ion-button expand="block" color="danger" (click)="generarResumen()" style="flex:1">
       <ion-icon name="document-outline" slot="start"></ion-icon>
       {{ cargando ? 'Buscando recursos...' : 'Generar Informe' }}
     </ion-button>
-    <ion-button expand="block" color="medium" fill="outline" (click)="cerrar()" style="flex:1;background-color: white;">
+    <ion-button expand="block" color="medium" fill="outline" (click)="cerrar()" style="flex:1;">
       Cancelar
     </ion-button>
+  </div>
+  @if (faltanCamposObligatorios) {
+    <div style="background-color: #fff3cd; border: 1px solid #ffeeba; padding: 12px; border-radius: 6px; margin-top: 8px; color: #856404;">
+      <strong>⚠️ No se puede generar el informe</strong>
+      <p style="font-size: 13px; margin: 4px 0 0 0;">Faltan campos obligatorios (marcados con *).</p>
     </div>
-    @if (faltanCamposObligatorios) {
-      <div style="background-color: #fff3cd; border: 1px solid #ffeeba; padding: 12px; border-radius: 6px; margin-top: 8px;">
-        <strong>⚠️ No se puede generar el informe</strong>
-        <p style="font-size: 13px; margin: 4px 0 0 0;">Faltan campos obligatorios (marcados con *).</p>
-      </div>
-    }
   }
+}
+
 @if (vista === 'resumen') {
     <!-- Botón volver -->
     <ion-button fill="clear" (click)="volver()">
@@ -174,8 +146,8 @@
     </ion-button>
 
     <!-- Datos introducidos -->
-    <ion-list  class="dialog-list-blanco">
-      <ion-list-header style="background:#f0f0f0; color:black; border-radius:6px;">
+    <ion-list class="dialog-list-blanco">
+      <ion-list-header class="header-acordeon">
         <ion-icon name="document-text-outline" style="margin-right:8px; color:#e63946;"></ion-icon>
         <ion-label><strong>Datos de la emergencia</strong></ion-label>
       </ion-list-header>
@@ -188,8 +160,8 @@
 
     <!-- Municipio -->
     @if (emergenciaService.resultados?.municipio) {
-    <ion-list style="margin-top:8px;"  class="dialog-list-blanco">
-      <ion-list-header style="background:#f0f0f0; color:black; border-radius:6px;">
+    <ion-list style="margin-top:8px;" class="dialog-list-blanco">
+      <ion-list-header class="header-acordeon">
         <ion-icon name="business-outline" style="margin-right:8px; color:#e63946;"></ion-icon>
         <ion-label><strong>Municipio</strong></ion-label>
       </ion-list-header>
@@ -201,8 +173,8 @@
     }
 
     <!-- Parques de extinción -->
-    <ion-list style="margin-top:8px;"  class="dialog-list-blanco">
-      <ion-list-header style="background:#f0f0f0; color:black; border-radius:6px;">
+    <ion-list style="margin-top:8px;" class="dialog-list-blanco">
+      <ion-list-header class="header-acordeon">
         <ion-icon name="flame-outline" style="margin-right:8px; color:#e63946;"></ion-icon>
         <ion-label><strong>Parques de extinción ({{emergenciaService.resultados?.parques?.length || 0}} en {{emergenciaService.emergencia.distanciaMedios}} km)</strong></ion-label>
       </ion-list-header>
@@ -221,9 +193,9 @@
       }
     </ion-list>
 
-    <!-- Inventario medios/recursos humanos -->
-    <ion-list style="margin-top:8px;"  class="dialog-list-blanco">
-      <ion-list-header style="background:#f0f0f0; color:black; border-radius:6px;">
+    <!-- Inventario recursos humanos -->
+    <ion-list style="margin-top:8px;" class="dialog-list-blanco">
+      <ion-list-header class="header-acordeon">
         <ion-icon name="people-outline" style="margin-right:8px; color:#e63946;"></ion-icon>
         <ion-label><strong>Recursos humanos ({{emergenciaService.resultados?.inventario?.length || 0}} en {{emergenciaService.emergencia.distanciaMedios}} km)</strong></ion-label>
       </ion-list-header>
@@ -243,8 +215,8 @@
     </ion-list>
 
     <!-- Hidrantes -->
-    <ion-list style="margin-top:8px;"  class="dialog-list-blanco">
-      <ion-list-header style="background:#f0f0f0; color:black; border-radius:6px;">
+    <ion-list style="margin-top:8px;" class="dialog-list-blanco">
+      <ion-list-header class="header-acordeon">
         <ion-icon name="water-outline" style="margin-right:8px; color:#e63946;"></ion-icon>
         <ion-label><strong>Hidrantes ({{emergenciaService.resultados?.hidrantes?.length || 0}} en {{emergenciaService.emergencia.distanciaHidrantes}} km)</strong></ion-label>
       </ion-list-header>
@@ -269,6 +241,4 @@
       </ion-button>
     </div>
   }
-
-
 </ion-content>

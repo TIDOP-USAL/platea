@@ -32,11 +32,109 @@
  * https://ionicframework.com/docs/theming/dark-mode
  */
 
-/* @import "@ionic/angular/css/palettes/dark.always.css"; */
-/* @import "@ionic/angular/css/palettes/dark.class.css"; */
-@import '@ionic/angular/css/palettes/dark.system.css';
-// src/global.scss
+@import '@ionic/angular/css/palettes/dark.class.css';
 
 body {
   font-size: 12px;
+}
+
+/* =========================
+   ESTILOS BASE (MODO CLARO)
+   ========================= */
+
+.dialog-blanco {
+  --background: #fafafa !important;
+  --color: #3c3c3c !important;
+  background-color: #fafafa !important;
+  color: #3c3c3c !important;
+}
+
+.dialog-list-blanco {
+  background: #ffffff !important;
+  color: #3c3c3c !important;
+}
+
+.dialog-list-blanco ion-item,
+.dialog-list-blanco ion-button,
+.dialog-list-blanco ion-accordion,
+.dialog-list-blanco ion-accordion-group {
+  --background: #ffffff !important;
+  --ion-background-color: #ffffff !important;
+  --color: #3c3c3c !important;
+  --ion-text-color: #3c3c3c !important;
+  background-color: #ffffff !important;
+  color: #3c3c3c !important;
+}
+
+.header-acordeon {
+  cursor: pointer;
+  background-color: #f0f0f0 !important;
+  color: #000000 !important;
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
+
+
+/* =========================
+   MODO OSCURO PERSONALIZADO
+   ========================= */
+
+body.dark {
+  --ion-background-color: #121212;
+  --ion-background-color-rgb: 18, 18, 18;
+  --ion-text-color: #ffffff;
+  --ion-text-color-rgb: 255, 255, 255;
+
+  /* Forzar que las listas, tarjetas y elementos flotantes se vuelvan oscuros */
+  ion-list, ion-item, .leyendas > div, .aviso-vacio {
+    --background: #1e1e1e !important;
+    --ion-background-color: #1e1e1e !important;
+    --color: #ffffff !important;
+    --ion-text-color: #ffffff !important;
+    background-color: #1e1e1e !important;
+    color: #ffffff !important;
+  }
+
+  /* Adaptar los botones blancos al modo oscuro */
+  .btn-blanco {
+    --background: #2a2a2a;
+    --color: #ffffff;
+    --background-hover: #3a3a3a;
+    --background-activated: #4a4a4a;
+  }
+  
+  #lista-capas, #lista-leyendas, #lista-terrenos {
+    background-color: #ffffff;
+    color: #3c3c3c;
+  }
+
+  /* Modal y diálogos en modo oscuro */
+  .dialog-blanco {
+    --background: #1e1e1e !important;
+    --color: #ffffff !important;
+    background-color: #1e1e1e !important;
+    color: #ffffff !important;
+  }
+
+  .dialog-list-blanco {
+    background: #1e1e1e !important;
+    color: #ffffff !important;
+  }
+
+  .dialog-list-blanco ion-item,
+  .dialog-list-blanco ion-button,
+  .dialog-list-blanco ion-accordion,
+  .dialog-list-blanco ion-accordion-group {
+    --background: #1e1e1e !important;
+    --ion-background-color: #1e1e1e !important;
+    --color: #ffffff !important;
+    --ion-text-color: #ffffff !important;
+    background-color: #1e1e1e !important;
+    color: #ffffff !important;
+  }
+
+  .header-acordeon {
+    background-color: #2a2a2a !important;
+    color: #ffffff !important;
+  }
 }
