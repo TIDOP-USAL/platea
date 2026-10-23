@@ -10,7 +10,7 @@ import { closeCircleOutline, locationOutline, documentTextOutline, saveOutline,
    cloudUpload, chevronUpOutline, chevronDownOutline, 
    globe, albums, close, download, 
    flash, syncOutline} from 'ionicons/icons';
-import { ModalController, ToastController } from '@ionic/angular/standalone';
+import { ModalController, ToastController, isPlatform } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { constructOutline, sunnyOutline, moonOutline } from 'ionicons/icons';
 import { MapaService } from '../services/mapa-service';
@@ -25,17 +25,11 @@ import { ActualizarCapasComponent } from '../components/actualizar-capas/actuali
 import { Capacitor } from '@capacitor/core';
 import { MedicionService, TipoMedicion } from '../services/medicion';
 import { BuscadorMunicipiosService, Municipio } from '../services/buscador-municipios';
-import { ExportarPdfService, ElementoLeyenda } from '../services/exportar-pdf';
+import { TraficoRutas } from '../services/trafico-rutas';
 
 type Panel = 'buscar' | 'capas' | 'diputacion' | 'offline' | 'online' | 'mas' | 'terrenos' | 'ajustes';
 
-/**
- * Extensión del botón de vista global [oeste, sur, este, norte].
- * Pendiente de que Ana decida; alternativas:
- *   Castilla y León: [-7.08, 40.08, -1.77, 43.24]
- *   Península:       [-9.6, 35.9, 3.4, 43.9]
- */
-const EXTENSION_VISTA_GLOBAL: [number, number, number, number] = [-5.74, 40.08, -4.25, 41.2]; // Provincia de Ávila
+const EXTENSION_VISTA_GLOBAL: [number, number, number, number] = [-5.74, 40.08, -4.25, 41.2];
 //import { IonButtons } from '@ionic/angular';
 //import { IonImg } from '@ionic/angular';
 addIcons({
@@ -67,10 +61,9 @@ export class HomePage implements OnInit {
   leyendasInforme = false;
   emergencia: Emergencia;
   resultadosEmergencia: ResultadosEmergencia | null = null;
-  // El index.html ya ha aplicado el modo oscuro guardado antes de arrancar
   esModoOscuro = document.body.classList.contains('dark');
 
-  // Botón de información: los popups solo se abren con este modo activo
+  esEscritorio = isPlatform('desktop');
   modoInfo = false;
 
   textoBusqueda = '';
@@ -78,14 +71,12 @@ export class HomePage implements OnInit {
   errorBusqueda = '';
   mostrarResultados = false;
 
-  generandoPdf = false;
-
  toggleDarkMode() {
     this.esModoOscuro = !this.esModoOscuro;
     document.body.classList.toggle('dark', this.esModoOscuro);
     try {
       localStorage.setItem('platea-modo-oscuro', this.esModoOscuro ? '1' : '0');
-    } catch { /* sin almacenamiento: solo dura esta sesión */ }
+    } catch { }
   }
   constructor(public mapa: MapaService,
     private modalCtrl: ModalController,
@@ -98,7 +89,7 @@ export class HomePage implements OnInit {
     private toastCtrl: ToastController,
     public medicion: MedicionService,
     private buscador: BuscadorMunicipiosService,
-    private exportarPdfService: ExportarPdfService) {
+    private traficoRutas: TraficoRutas) {
     addIcons({ closeCircleOutline, locationOutline, documentTextOutline, saveOutline, closeOutline, 
               navigateOutline, documentOutline, alertCircleOutline, constructOutline, 
               cloudUpload, chevronUpOutline, chevronDownOutline, globe, albums, close, download, syncOutline,
@@ -108,11 +99,9 @@ export class HomePage implements OnInit {
   }
 
   ngOnInit() {
-    // Los clics sobre elementos solo abren el popup si está activo el botón de información,
-    // así arrastrar o moverse por el mapa no abre ventanas sin querer
-    for (const origen of [this.capasDiputacion, this.capasOffline, this.capasOnline, this.emergenciaService]) {
+    for (const origen of [this.capasDiputacion, this.capasOffline, this.capasOnline, this.emergenciaService, this.traficoRutas]) {
       origen.modalClick$.subscribe((html: string) => {
-        if (!this.modoInfo || this.medicion.activa || this.modoSeleccionMapa) return;
+        if ((this.esEscritorio && !this.modoInfo) || this.medicion.activa || this.modoSeleccionMapa) return;
         this.modalContent = html;
         this.setOpen(true);
       });
@@ -135,6 +124,7 @@ export class HomePage implements OnInit {
     await this.capasDiputacion.cargarCapasDiputacion(this.mapa.map!);
     await this.capasOffline.cargarCapasOffline(this.mapa.map!);
     this.capasOnline.cargarCapasOnline(this.mapa.map!);
+    this.actualizarTraficoRutas();
     
     
     this.mapa.map!.once('idle', this.ocultarLoader);  
@@ -170,6 +160,7 @@ export class HomePage implements OnInit {
         this.dibujarEmergenciaEnMapa();
       this.medicion.redibujar();
       this.buscador.resaltar(this.mapa.map!);
+      this.actualizarTraficoRutas();
     });
     this.panel = null;
   }
@@ -210,21 +201,27 @@ export class HomePage implements OnInit {
         this.capasOnline.cargarCapaOnline(this.mapa.map!, capa);
       //Una vez cargada la capa se quita el loader
       this.mapa.map!.once('idle', this.ocultarLoader);  
+      this.actualizarTraficoRutas();
       return;
     }
     //Si la capa existe en el mapa, se oculta o se muestra
     this.mapa.onCapasChange(capa, event);
+    this.actualizarTraficoRutas();
   }
 
-  /* =========================
-     BARRA DE HERRAMIENTAS
-     ========================= */
+  actualizarTraficoRutas() {
+    if (!this.esEscritorio) return;
+    const capa = this.capasDiputacion.getCapaPorSource('RutasEscolares');
+    if (capa?.checked) {
+      this.traficoRutas.activar(this.mapa.map!, capa);
+    } else if (this.traficoRutas.activo) {
+      this.traficoRutas.desactivar(this.mapa.map!);
+    }
+  }
 
-  /** Abre un panel de la barra, o lo cierra si ya estaba abierto */
   togglePanel(panel: Panel) {
     this.panel = this.panel === panel ? null : panel;
     if (this.panel === 'buscar') {
-      // El input se crea al abrir el panel; se enfoca en el siguiente ciclo
       setTimeout(() => document.querySelector<HTMLInputElement>('.buscador input')?.focus());
     }
   }
@@ -233,7 +230,6 @@ export class HomePage implements OnInit {
     this.panel = null;
   }
 
-  /** El botón de capas queda resaltado con su menú o con cualquiera de sus listas abierta */
   esPanelCapas(): boolean {
     return this.panel === 'capas' || this.panel === 'diputacion' || this.panel === 'offline' || this.panel === 'online';
   }
@@ -242,16 +238,11 @@ export class HomePage implements OnInit {
     return this.panel === 'mas' || this.panel === 'terrenos' || this.panel === 'ajustes';
   }
 
-  /** Encuadra el mapa en la extensión de la vista global */
   vistaGlobal() {
     const [o, s, e, n] = EXTENSION_VISTA_GLOBAL;
     this.mapa.map?.fitBounds([[o, s], [e, n]], { padding: 20 });
   }
 
-  /**
-   * Activa o desactiva el modo información. Si no hay ninguna capa visible
-   * no se activa y se avisa al usuario de que active una.
-   */
   async toggleModoInfo() {
     if (this.modoInfo) {
       this.modoInfo = false;
@@ -267,13 +258,8 @@ export class HomePage implements OnInit {
   }
 
   private hayCapasActivas(): boolean {
-    return this.capasVisibles().length > 0 || this.mostrarLimpiarEmergencias;
-  }
-
-  /** Capas marcadas en cualquiera de las tres listas */
-  private capasVisibles(): any[] {
     return [...this.capasDiputacion.capas, ...this.capasOffline.capasOffline, ...this.capasOnline.capasOnline]
-      .filter(c => c.checked);
+      .some(c => c.checked) || this.mostrarLimpiarEmergencias;
   }
 
   iniciarMedicion(tipo: TipoMedicion) {
@@ -286,7 +272,7 @@ export class HomePage implements OnInit {
     const texto = this.textoBusqueda;
     try {
       const resultados = await this.buscador.buscar(texto);
-      if (texto !== this.textoBusqueda) return; // llegó tarde, ya se ha escrito otra cosa
+      if (texto !== this.textoBusqueda) return;
       this.resultadosBusqueda = resultados;
       this.errorBusqueda = '';
       this.mostrarResultados = texto.trim().length >= 2;
@@ -313,22 +299,6 @@ export class HomePage implements OnInit {
     this.resultadosBusqueda = [];
     this.mostrarResultados = false;
     if (this.mapa.map) this.buscador.limpiar(this.mapa.map);
-  }
-
-  /** Genera un PDF con lo que se ve en el mapa y la leyenda de las capas visibles */
-  async exportarPdf() {
-    this.generandoPdf = true;
-    try {
-      const leyenda: ElementoLeyenda[] = this.capasVisibles().map(c => ({ texto: c.texto, imagen: c.imagen }));
-      await this.exportarPdfService.exportar(this.mapa.map!, leyenda);
-      this.cerrarPaneles();
-      if (this.esNativo) await this.avisar('PDF guardado en Documentos', 'success');
-    } catch (e) {
-      console.error('Error generando el PDF', e);
-      await this.avisar('No se ha podido generar el PDF', 'danger');
-    } finally {
-      this.generandoPdf = false;
-    }
   }
 
   private async avisar(mensaje: string, color: string) {

@@ -5,19 +5,13 @@ import * as turf from '@turf/turf';
 export type TipoMedicion = 'linea' | 'area';
 
 const SOURCE_MEDICION = 'medicion';
-const TOLERANCIA_PX = 15;  // distancia en pantalla para considerar que se pulsa un vértice
+const TOLERANCIA_PX = 15;
 
-/**
- * Herramienta de medición sobre el mapa: distancia en línea recta (polilínea)
- * o superficie (polígono). Cada clic añade un vértice y el resultado se
- * recalcula al momento. Se termina volviendo a pulsar el último punto (o el
- * primero, para cerrar un área); "borrar" quita la medida.
- */
 @Injectable({ providedIn: 'root' })
 export class MedicionService {
   tipo: TipoMedicion | null = null;
-  activa = false;          // true mientras se están añadiendo puntos
-  resultado = '';          // texto ya formateado (p. ej. "1,24 km")
+  activa = false;
+  resultado = '';
   puntos: [number, number][] = [];
 
   private map?: maplibregl.Map;
@@ -27,17 +21,11 @@ export class MedicionService {
     this.cursor = [e.lngLat.lng, e.lngLat.lat];
     this.dibujar();
   };
-  // Al salir del mapa (p. ej. hacia los botones) la línea deja de seguir al ratón
   private onOut = () => {
     this.cursor = null;
     this.dibujar();
   };
 
-  /**
-   * Empieza una medición nueva (borra la anterior si la hubiera)
-   * @param map El mapa
-   * @param tipo 'linea' para distancias o 'area' para superficies
-   */
   iniciar(map: maplibregl.Map, tipo: TipoMedicion) {
     this.borrar();
     this.map = map;
@@ -52,7 +40,6 @@ export class MedicionService {
     this.asegurarCapas();
   }
 
-  /** Deja de añadir puntos pero mantiene la medida dibujada */
   terminar() {
     if (!this.map) return;
     this.activa = false;
@@ -61,12 +48,10 @@ export class MedicionService {
     this.map.off('mousemove', this.onMove);
     this.map.off('mouseout', this.onOut);
     this.map.getCanvas().style.cursor = '';
-    // Se reactiva tras el clic en curso para que un doble clic no haga zoom
     setTimeout(() => this.map?.doubleClickZoom.enable(), 300);
     this.dibujar();
   }
 
-  /** Quita la medición del mapa y vuelve al estado inicial */
   borrar() {
     if (this.activa) this.terminar();
     this.puntos = [];
@@ -75,7 +60,6 @@ export class MedicionService {
     this.dibujar();
   }
 
-  /** Vuelve a añadir las capas de la medición tras un cambio de estilo del mapa */
   redibujar() {
     if (this.tipo) {
       this.asegurarCapas();
@@ -83,7 +67,6 @@ export class MedicionService {
     }
   }
 
-  /** Añade un vértice, o termina si se pulsa sobre el último (o el primero en un área) */
   private añadirPunto(e: maplibregl.MapMouseEvent) {
     const minimo = this.tipo === 'area' ? 3 : 2;
     if (this.puntos.length >= minimo) {
@@ -127,7 +110,6 @@ export class MedicionService {
     });
   }
 
-  /** Actualiza la geometría dibujada y el texto del resultado */
   private dibujar() {
     const source = this.map?.getSource(SOURCE_MEDICION) as maplibregl.GeoJSONSource | undefined;
     if (!source) return;

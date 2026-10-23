@@ -11,10 +11,6 @@ export interface Municipio {
   feature: any;
 }
 
-/**
- * Buscador de municipios de la provincia de Ávila. Usa la capa local de
- * términos municipales, así que funciona sin conexión en el móvil.
- */
 @Injectable({ providedIn: 'root' })
 export class BuscadorMunicipiosService {
   private municipios: Municipio[] | null = null;
@@ -22,10 +18,6 @@ export class BuscadorMunicipiosService {
 
   constructor(private emergenciaService: EmergenciaService) {}
 
-  /**
-   * Devuelve los municipios cuyo nombre contiene el texto (sin tener en
-   * cuenta tildes ni mayúsculas); primero los que empiezan por él.
-   */
   async buscar(texto: string, max = 8): Promise<Municipio[]> {
     const q = normalizar(texto.trim());
     if (q.length < 2) return [];
@@ -37,7 +29,6 @@ export class BuscadorMunicipiosService {
     return coinciden.slice(0, max);
   }
 
-  /** Centra el mapa en el municipio y resalta su límite */
   irA(map: maplibregl.Map, municipio: Municipio) {
     this.seleccionado = municipio.feature;
     this.resaltar(map);
@@ -45,13 +36,11 @@ export class BuscadorMunicipiosService {
     map.fitBounds([[minX, minY], [maxX, maxY]], { padding: 60, maxZoom: 14 });
   }
 
-  /** Quita el resaltado del municipio buscado */
   limpiar(map: maplibregl.Map) {
     this.seleccionado = null;
     this.resaltar(map);
   }
 
-  /** Vuelve a dibujar el resaltado tras un cambio de estilo del mapa */
   resaltar(map: maplibregl.Map) {
     const data = this.seleccionado ? turf.featureCollection([this.seleccionado]) : turf.featureCollection([]);
     const source = map.getSource(SOURCE_RESALTADO) as maplibregl.GeoJSONSource | undefined;

@@ -15,7 +15,6 @@
   width: auto;
 }
 
-/* Cada tema usa la versión del logo que se lee sobre su gris */
 .logo-cabecera .logo-oscuro,
 :host-context(body.dark) .logo-cabecera .logo-claro {
   display: none;
@@ -39,7 +38,6 @@
 
 /* =========================
    BARRA DE HERRAMIENTAS
-   Columna de botones en el lado derecho
    ========================= */
 
 $tam-boton: 42px;
@@ -54,7 +52,6 @@ $top-barra: calc(var(--offset-top, 0px) + #{$hueco});
   display: flex;
   flex-direction: column;
   gap: $hueco;
-  /* Deja pasar los clics al mapa por los huecos */
   pointer-events: none;
 
   > * {
@@ -134,7 +131,6 @@ $top-barra: calc(var(--offset-top, 0px) + #{$hueco});
       color: var(--platea-texto-suave);
     }
 
-    /* Quita la X nativa del navegador, ya tenemos la nuestra */
     &::-webkit-search-cancel-button {
       display: none;
     }
@@ -191,7 +187,6 @@ $top-barra: calc(var(--offset-top, 0px) + #{$hueco});
 
 /* =========================
    PANELES
-   Se abren a la izquierda de la columna de botones
    ========================= */
 
 .panel {
@@ -350,7 +345,7 @@ $top-barra: calc(var(--offset-top, 0px) + #{$hueco});
 }
 
 /* =========================
-   AVISOS INFERIORES (info, medición, selección)
+   AVISOS INFERIORES
    ========================= */
 
 .aviso-inferior {

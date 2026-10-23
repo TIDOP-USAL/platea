@@ -39,9 +39,7 @@ body {
 }
 
 /* =========================
-   ESTILOS BASE
-   Los colores salen de los tokens --platea-* de theme/variables.scss,
-   que ya cambian solos en modo oscuro (body.dark).
+   ESTILOS BASE (MODO CLARO)
    ========================= */
 
 .dialog-blanco {
@@ -76,7 +74,6 @@ body {
   margin-bottom: 4px;
 }
 
-/* Foco visible para quien navega con teclado */
 :focus-visible {
   outline: 2px solid var(--platea-azul-logo);
   outline-offset: 2px;
@@ -87,8 +84,8 @@ body {
    ========================= */
 
 body.dark {
-  --ion-background-color: #121212;
-  --ion-background-color-rgb: 18, 18, 18;
+  --ion-background-color: #2f2f2f;
+  --ion-background-color-rgb: 47, 47, 47;
   --ion-text-color: #ffffff;
   --ion-text-color-rgb: 255, 255, 255;
 

@@ -14,6 +14,7 @@ const adminUsersRoutes = require('./routes/admin-users');
 const adminContenidoRoutes = require('./routes/admin-contenido');
 const { requireAuth } = require('./middleware/auth');
 const exportRouter = require('./routes/export');
+const traficoRouter = require('./routes/trafico');
 
 const app  = express();
 app.set('trust proxy', 1); 
@@ -76,6 +77,7 @@ app.use('/admin/api/users', adminUsersRoutes);
 
 app.use('/api/capas',  capasRouter);
 app.use('/api/grupos', gruposRouter);
+app.use('/api/trafico', traficoRouter);
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 

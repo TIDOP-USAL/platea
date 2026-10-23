@@ -146,7 +146,7 @@ ion-modal.modal-info.modal-redondo {
 
 body.dark {
   ion-modal.modal-info.modal-redondo {
-    --background: #18181b !important;
+    --background: var(--platea-superficie) !important;
   }
 
   .modal-sin-toolbar {
@@ -164,16 +164,16 @@ body.dark {
 
   .popup-title {
     color: #ffffff !important;
-    border-bottom: 1px solid #27272a !important;
+    border-bottom: 1px solid var(--platea-borde) !important;
   }
 
   .popup-img {
-    border: 1px solid #3f3f46 !important;
+    border: 1px solid var(--platea-borde) !important;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3) !important;
   }
 
   .popup-info {
-    border: 1px solid #3f3f46 !important;
+    border: 1px solid var(--platea-borde) !important;
     background-color: transparent !important;
   }
 

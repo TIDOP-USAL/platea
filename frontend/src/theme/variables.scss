@@ -1,14 +1,6 @@
 // For information on how to create your own theme, please refer to:
 // https://ionicframework.com/docs/theming/
 
-/* =========================
-   PALETA PLATEA (colores del logo)
-   -------------------------
-   Azul del logo #1E8FE8, gris oscuro #3F3F3F y gris claro #D9D9D9.
-   El azul que lleva texto encima está oscurecido (#0A6CC2) para cumplir
-   contraste WCAG AA (≥ 4.5:1) con texto blanco.
-   ========================= */
-
 :root {
   --platea-azul: #0a6cc2;
   --platea-azul-logo: #1e8fe8;
@@ -16,7 +8,7 @@
   --platea-gris-oscuro: #3f3f3f;
   --platea-gris-claro: #d9d9d9;
 
-  --platea-cabecera: #eceef1;  // gris claro (en oscuro, el gris oscuro del logo)
+  --platea-cabecera: #eceef1;
   --platea-superficie: #ffffff;
   --platea-superficie-2: #f4f5f7;
   --platea-borde: #d9d9d9;
@@ -42,20 +34,19 @@
 body.dark {
   --platea-azul: #5ab0f5;
   --platea-azul-logo: #5ab0f5;
-  --platea-azul-suave: #17324a;
+  --platea-azul-suave: #34495c;
   --platea-cabecera: #3f3f3f;
-  --platea-superficie: #1e1e1e;
-  --platea-superficie-2: #2a2a2a;
-  --platea-borde: #3f3f3f;
+  --platea-superficie: #383838;
+  --platea-superficie-2: #444444;
+  --platea-borde: #525252;
   --platea-texto: #f2f2f2;
   --platea-texto-suave: #bdbdbd;
-  --platea-sombra: 0 2px 8px rgba(0, 0, 0, 0.6);
+  --platea-sombra: 0 2px 8px rgba(0, 0, 0, 0.35);
 
-  // En oscuro el azul es claro, así que el texto encima va oscuro
   --ion-color-primary: #5ab0f5;
   --ion-color-primary-rgb: 90, 176, 245;
-  --ion-color-primary-contrast: #0b1a29;
-  --ion-color-primary-contrast-rgb: 11, 26, 41;
+  --ion-color-primary-contrast: #22303c;
+  --ion-color-primary-contrast-rgb: 34, 48, 60;
   --ion-color-primary-shade: #4f9bd8;
   --ion-color-primary-tint: #6bb8f6;
 }

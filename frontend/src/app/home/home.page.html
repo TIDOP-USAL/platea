@@ -10,10 +10,6 @@
 <ion-content [fullscreen]="true">
 
   <div id="map" style="height: 100%;"></div>
-
-  <!-- =========================
-       BARRA DE HERRAMIENTAS (lado derecho)
-       ========================= -->
   <div class="barra-herramientas">
 
     <div class="botones">
@@ -26,10 +22,12 @@
       <button type="button" class="btn-herramienta" (click)="vistaGlobal()" title="Vista global" aria-label="Vista global">
         <ion-icon name="scan-outline"></ion-icon>
       </button>
+      @if (esEscritorio) {
       <button type="button" class="btn-herramienta" [class.activo]="modoInfo" [attr.aria-pressed]="modoInfo"
         (click)="toggleModoInfo()" title="Consultar información de un elemento" aria-label="Consultar información">
         <ion-icon name="information-circle-outline"></ion-icon>
       </button>
+      }
       <button type="button" class="btn-herramienta" [class.activo]="esPanelCapas()" (click)="togglePanel('capas')"
         title="Capas" aria-label="Capas" [attr.aria-expanded]="esPanelCapas()">
         <ion-icon name="layers-outline"></ion-icon>
@@ -56,9 +54,6 @@
     </div>
   </div>
 
-  <!-- =========================
-       PANELES (se abren a la izquierda de la barra)
-       ========================= -->
   @if (panel) {
   <div class="panel" [class.panel-menu]="panel === 'capas' || panel === 'mas'">
 
@@ -107,9 +102,6 @@
     </button>
     <button type="button" class="opcion-menu" (click)="togglePanel('terrenos')">
       <ion-icon name="globe"></ion-icon>Mapa base
-    </button>
-    <button type="button" class="opcion-menu" (click)="exportarPdf()" [disabled]="generandoPdf">
-      <ion-icon name="document-outline"></ion-icon>{{ generandoPdf ? 'Generando PDF…' : 'Exportar PDF' }}
     </button>
     <button type="button" class="opcion-menu" (click)="togglePanel('ajustes')">
       <ion-icon name="settings-outline"></ion-icon>Ajustes
@@ -371,9 +363,6 @@
   </div>
   }
 
-  <!-- =========================
-       AVISOS INFERIORES
-       ========================= -->
   @if (medicion.tipo) {
   <div class="aviso-inferior medicion" role="status">
     <span>
