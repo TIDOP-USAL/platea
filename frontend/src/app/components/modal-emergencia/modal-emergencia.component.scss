@@ -22,18 +22,18 @@
 body.dark {
 
   .dialog-blanco {
-    --background: #1e1e1e !important;
+    --background: var(--platea-superficie) !important;
     --color: #ffffff !important;
   }
 
   .dialog-list-blanco {
-    background: #1e1e1e !important;
+    background: var(--platea-superficie) !important;
     color: #ffffff !important;
   }
 
   .dialog-list-blanco ion-item,
   .dialog-list-blanco ion-button {
-    --background: #1e1e1e !important;
+    --background: var(--platea-superficie) !important;
     --color: #ffffff !important;
   }
 

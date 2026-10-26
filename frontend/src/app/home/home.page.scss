@@ -1,39 +1,27 @@
 @import "maplibre-gl/dist/maplibre-gl.css";
 
-#container {
-  text-align: center;
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%);
-}
-
 .cabecera {
-  --background: white;
+  --background: var(--platea-cabecera);
+  --padding-top: 12px;
+  --padding-bottom: 12px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --border-color: var(--platea-cabecera);
 }
 
-.btn-blanco {
-  --background: #f4f5f8;
-  --color: #3c3c3c;
-  --background-hover: #000000;
-  --background-activated: #0e0e0e;
+.logo-cabecera img {
+  display: block;
+  height: 60px;
+  width: auto;
 }
 
-#container strong {
-  font-size: 20px;
-  line-height: 26px;
+.logo-cabecera .logo-oscuro,
+:host-context(body.dark) .logo-cabecera .logo-claro {
+  display: none;
 }
 
-#container p {
-  font-size: 16px;
-  line-height: 22px;
-  color: #8c8c8c;
-  margin: 0;
-}
-
-#container a {
-  text-decoration: none;
+:host-context(body.dark) .logo-cabecera .logo-oscuro {
+  display: block;
 }
 
 /* =========================
@@ -49,156 +37,273 @@
 }
 
 /* =========================
-   TERRENOS
+   BARRA DE HERRAMIENTAS
    ========================= */
 
-#terreno {
+$tam-boton: 42px;
+$hueco: 10px;
+$top-barra: calc(var(--offset-top, 0px) + #{$hueco});
+
+.barra-herramientas {
   position: absolute;
-  bottom: calc(5px + var(--ion-safe-area-bottom, 0px));
-  right: 5px;
+  top: $top-barra;
+  right: calc(#{$hueco} + var(--ion-safe-area-right, 0px));
   z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: $hueco;
+  pointer-events: none;
+
+  > * {
+    pointer-events: auto;
+  }
 }
 
-#lista-terrenos {
-  position: absolute;
-  bottom: calc(55px + var(--ion-safe-area-bottom, 0px));
-  right: 5px;
-  z-index: 4000;
+.botones {
+  display: flex;
+  flex-direction: column;
+  align-self: flex-end;
+  background: var(--platea-cabecera);
+  border-radius: 10px;
+  box-shadow: var(--platea-sombra);
+  overflow: hidden;
+}
 
-  /* Se adapta al contenido */
-  width: fit-content;
-  max-width: calc(100vw - 20px);
+.btn-herramienta {
+  width: $tam-boton;
+  height: $tam-boton;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-bottom: 1px solid rgba(127, 127, 127, 0.3);
+  background: var(--platea-cabecera);
+  color: var(--platea-gris-oscuro);
+  font-size: 22px;
+  cursor: pointer;
 
-  box-sizing: border-box;
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: var(--platea-azul-suave);
+    color: var(--platea-azul);
+  }
+
+  &.activo {
+    background: var(--platea-azul);
+    color: var(--ion-color-primary-contrast);
+  }
+}
+
+:host-context(body.dark) .btn-herramienta:not(.activo) {
+  color: var(--platea-texto);
 }
 
 /* =========================
-   LISTA DE CAPAS
+   BUSCADOR
    ========================= */
 
-#lista-capas {
-  position: absolute;
-  left: 10px;
-  z-index: 1000;
-
-  /* IMPORTANTE:
-     Se adapta al contenido */
-  width: fit-content;
-
-  /* Nunca ocupará más que la pantalla */
-  max-width: calc(100vw - 20px);
-
+.buscador {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  width: min(280px, calc(100vw - #{$tam-boton} - 4 * #{$hueco}));
+  padding: 0 6px 0 12px;
   box-sizing: border-box;
+  color: var(--platea-texto-suave);
 
-  padding: 6px;
-  border-radius: 10px;
+  input {
+    flex: 1;
+    min-width: 0;
+    height: $tam-boton;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--platea-texto);
+    font-size: 15px;
 
-  /* Scroll si hay demasiadas capas */
-  overflow-x: hidden;
+    &::placeholder {
+      color: var(--platea-texto-suave);
+    }
+
+    &::-webkit-search-cancel-button {
+      display: none;
+    }
+  }
+
+  &:focus-within {
+    outline: 2px solid var(--platea-azul-logo);
+    outline-offset: -2px;
+    border-radius: 10px;
+  }
+}
+
+.btn-limpiar {
+  display: flex;
+  border: none;
+  background: transparent;
+  color: var(--platea-texto-suave);
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.resultados-busqueda {
+  flex-basis: 100%;
+  margin: 0 0 0 -12px;
+  margin-right: -6px;
+  padding: 4px 0;
+  list-style: none;
+  border-top: 1px solid var(--platea-borde);
+  max-height: 50vh;
   overflow-y: auto;
+
+  button {
+    width: 100%;
+    padding: 10px 14px;
+    border: none;
+    background: transparent;
+    color: var(--platea-texto);
+    text-align: left;
+    font-size: 14px;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--platea-azul-suave);
+    }
+  }
+
+  .sin-resultados {
+    padding: 10px 14px;
+    color: var(--platea-texto-suave);
+    font-size: 14px;
+  }
 }
 
-/* Altura máxima de las listas */
+/* =========================
+   PANELES
+   ========================= */
 
-.lista-diputacion {
-  max-height: calc(
-    100dvh - 120px - env(safe-area-inset-bottom, 0px)
-  ) !important;
+.panel {
+  position: absolute;
+  top: $top-barra;
+  right: calc(#{$hueco} * 2 + #{$tam-boton} + var(--ion-safe-area-right, 0px));
+  z-index: 1001;
+  width: fit-content;
+  min-width: 200px;
+  max-width: calc(100vw - #{$tam-boton} - 4 * #{$hueco});
+  max-height: calc(100% - var(--offset-top, 0px) - 3 * #{$hueco} - var(--ion-safe-area-bottom, 0px));
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  background: var(--platea-superficie);
+  color: var(--platea-texto);
+  border-radius: 10px;
+  box-shadow: var(--platea-sombra);
+  overflow: hidden;
+
+  ion-list {
+    overflow-y: auto;
+    padding-top: 0;
+  }
 }
 
-.lista-offline {
-  max-height: calc(
-    100dvh - 185px - env(safe-area-inset-bottom, 0px)
-  ) !important;
+.panel-menu {
+  padding: 4px 0;
 }
 
-.lista-online {
-  max-height: calc(
-    100dvh - 240px - env(safe-area-inset-bottom, 0px)
-  ) !important;
+.panel-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 8px 8px 14px;
+  background: var(--platea-azul);
+  color: var(--ion-color-primary-contrast);
+  font-size: 14px;
+  font-weight: 600;
+
+  button {
+    display: flex;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font-size: 20px;
+    cursor: pointer;
+  }
+}
+
+.opcion-menu {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 11px 16px;
+  border: none;
+  background: transparent;
+  color: var(--platea-texto);
+  font-size: 14px;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+
+  ion-icon {
+    font-size: 20px;
+    color: var(--platea-azul);
+  }
+
+  &:hover {
+    background: var(--platea-azul-suave);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
 }
 
 /* =========================
    ELEMENTOS DE LAS CAPAS
    ========================= */
 
-#lista-capas ion-item {
-  margin-bottom: 0;
-  --min-height: 34px;
-  padding: 0;
-}
+.lista-capas {
+  ion-list-header {
+    color: var(--platea-azul);
+    font-weight: 600;
+  }
 
-#lista-capas ion-item ion-checkbox {
-  flex: 0 0 0 !important;
-}
+  ion-item {
+    margin-bottom: 0;
+    --min-height: 34px;
+    padding: 0;
+  }
 
-#lista-capas ion-label {
-  font-size: 12px;
-  margin-top: 0;
-  margin-bottom: 0;
+  ion-item ion-checkbox {
+    flex: 0 0 0 !important;
+  }
 
-  /* Evita que nombres largos deformen la pantalla */
-  white-space: nowrap;
-}
+  ion-label {
+    font-size: 12px;
+    margin-top: 0;
+    margin-bottom: 0;
+    /* Evita que nombres largos deformen la pantalla */
+    white-space: nowrap;
+  }
 
-#lista-capas img {
-  margin-top: 0;
-  margin-bottom: 0;
-  max-width: 100%;
+  img {
+    margin-top: 0;
+    margin-bottom: 0;
+    max-width: 100%;
+  }
 }
 
 .item-inner {
   height: 34px !important;
-}
-
-/* =========================
-   LEYENDAS
-   ========================= */
-
-.boton-leyendas {
-  position: absolute;
-  top: calc(65px + var(--ion-safe-area-top, 0px));
-  right: calc(5px + var(--ion-safe-area-right, 0px));
-  z-index: 3000;
-}
-
-#lista-leyendas {
-  min-width: 25%;
-  width: fit-content;
-  max-width: calc(100vw - 20px);
-
-  position: absolute;
-  top: calc(105px + var(--ion-safe-area-top, 0px));
-  right: calc(5px + var(--ion-safe-area-right, 0px));
-  z-index: 3;
-
-  box-sizing: border-box;
-}
-
-#lista-leyendas ion-item {
-  font-size: 13px;
-}
-
-#lista-leyendas ion-item ion-checkbox {
-  flex: 28px 0 !important;
-}
-
-/* =========================
-   EMERGENCIAS
-   ========================= */
-
-.boton-emergencias {
-  position: absolute;
-  top: calc(115px + var(--ion-safe-area-top, 0px));
-  right: calc(5px + var(--ion-safe-area-right, 0px));
-  z-index: 1;
-}
-
-.boton-limpiar-emergencias {
-  position: absolute;
-  top: 165px;
-  right: 5px;
-  z-index: 2;
 }
 
 /* =========================
@@ -207,19 +312,20 @@
 
 .leyendas {
   position: absolute;
-  bottom: 25px;
-  right: 5px;
+  bottom: calc(25px + var(--ion-safe-area-bottom, 0px));
+  left: calc(#{$hueco} + var(--ion-safe-area-left, 0px));
   z-index: 1;
-
   display: flex;
   flex-direction: column;
 }
 
 .leyendas > div {
-  background-color: #ffffff;
+  background-color: var(--platea-superficie);
+  color: var(--platea-texto);
   padding: 10px;
   border-radius: 10px;
   margin-bottom: 10px;
+  box-shadow: var(--platea-sombra);
 }
 
 .leyendas ion-label {
@@ -239,14 +345,51 @@
 }
 
 /* =========================
-   ACTUALIZAR
+   AVISOS INFERIORES
    ========================= */
 
-.boton-actualizar {
+.aviso-inferior {
   position: absolute;
-  top: calc(215px + var(--ion-safe-area-top, 0px));
-  right: calc(5px + var(--ion-safe-area-right, 0px));
-  z-index: 1;
+  bottom: calc(20px + var(--ion-safe-area-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: calc(100vw - 32px);
+  box-sizing: border-box;
+  padding: 10px 12px 10px 16px;
+  border-radius: 20px;
+  background: var(--platea-gris-oscuro);
+  color: #ffffff;
+  font-size: 14px;
+  box-shadow: var(--platea-sombra);
+
+  ion-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  span {
+    display: flex;
+    flex-direction: column;
+  }
+
+  small {
+    opacity: 0.8;
+  }
+
+  button {
+    flex-shrink: 0;
+    padding: 6px 12px;
+    border: none;
+    border-radius: 14px;
+    background: #ffffff;
+    color: var(--platea-gris-oscuro);
+    font-weight: 600;
+    cursor: pointer;
+  }
 }
 
 /* =========================
@@ -268,35 +411,30 @@
   }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .pulso {
+    animation: none;
+    outline: 3px solid var(--platea-azul-logo);
+  }
+}
+
 /* =========================
    AVISO VACÍO
    ========================= */
+
 .aviso-vacio {
   position: absolute;
   top: 45%;
   left: 50%;
   transform: translate(-50%, -50%);
-
   z-index: 1;
-
   max-width: 80vw;
-
   padding: 14px 18px;
   border-radius: 14px;
-
-  background: rgba(255, 255, 255, 0.95);
-  color: #3c3c3c;
-
+  background: var(--platea-superficie);
+  color: var(--platea-texto);
   font-size: 14px;
   line-height: 20px;
   text-align: center;
-
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--platea-sombra);
 }
-
-/*
-ion-list,
-ion-item {
-  background-color: white;
-}
-*/

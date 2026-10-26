@@ -146,7 +146,7 @@ export class EmergenciaService {
 
   // Carga el GeoJSON de una capa de Diputación por su nombre_source
   // (antes se leía un archivo estático en assets/, ahora sale de contenido_capas)
-  private async cargarGeoJSON(nombreSource: string): Promise<any> {
+  async cargarGeoJSON(nombreSource: string): Promise<any> {
     const capas = await this.getCapasDiputacion();
     const capa = capas.find((c: any) => c.nombre_source === nombreSource);
     if (capa) await this.capasService.asegurarContenido(capa);

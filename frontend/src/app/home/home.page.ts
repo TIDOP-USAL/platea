@@ -1,14 +1,16 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';  // ← de Angular
 import { FormsModule } from '@angular/forms';
-import { IonListHeader, IonModal, IonButton, IonButtons, IonIcon, IonLabel, IonCheckbox, IonHeader, IonToolbar, IonTitle, IonList, IonRadioGroup, IonRadio, IonItem, IonContent } from '@ionic/angular/standalone';
+import { IonListHeader, IonModal, IonIcon, IonLabel, IonCheckbox, IonHeader, IonToolbar, IonList, IonRadioGroup, IonRadio, IonItem, IonContent } from '@ionic/angular/standalone';
 
+import { add, remove, scanOutline, informationCircleOutline, layersOutline, ellipsisHorizontal,
+   searchOutline, resizeOutline, squareOutline, settingsOutline, mapOutline } from 'ionicons/icons';
 import { closeCircleOutline, locationOutline, documentTextOutline, saveOutline,
    closeOutline, navigateOutline, documentOutline, alertCircleOutline, 
    cloudUpload, chevronUpOutline, chevronDownOutline, 
    globe, albums, close, download, 
    flash, syncOutline} from 'ionicons/icons';
-import { ModalController } from '@ionic/angular/standalone';
+import { ModalController, ToastController, isPlatform } from '@ionic/angular/standalone';
 import { addIcons } from 'ionicons';
 import { constructOutline, sunnyOutline, moonOutline } from 'ionicons/icons';
 import { MapaService } from '../services/mapa-service';
@@ -21,6 +23,13 @@ import { CapasService } from '../services/capas.service';
 import { CapasSqliteService } from '../services/capas-sqlite.service';
 import { ActualizarCapasComponent } from '../components/actualizar-capas/actualizar-capas.component';
 import { Capacitor } from '@capacitor/core';
+import { MedicionService, TipoMedicion } from '../services/medicion';
+import { BuscadorMunicipiosService, Municipio } from '../services/buscador-municipios';
+import { TraficoRutas } from '../services/trafico-rutas';
+
+type Panel = 'buscar' | 'capas' | 'diputacion' | 'offline' | 'online' | 'mas' | 'terrenos' | 'ajustes';
+
+const EXTENSION_VISTA_GLOBAL: [number, number, number, number] = [-5.74, 40.08, -4.25, 41.2];
 //import { IonButtons } from '@ionic/angular';
 //import { IonImg } from '@ionic/angular';
 addIcons({
@@ -32,17 +41,13 @@ addIcons({
   selector: 'app-home',
   templateUrl: 'home.page.html',
   styleUrls: ['home.page.scss'],
-  imports: [CommonModule, FormsModule, IonListHeader, IonModal, IonButton, IonButtons, IonIcon, IonLabel, IonCheckbox, IonHeader, IonToolbar, IonTitle, IonList, IonRadioGroup, IonRadio, IonItem, IonContent],
+  imports: [CommonModule, FormsModule, IonListHeader, IonModal, IonIcon, IonLabel, IonCheckbox, IonHeader, IonToolbar, IonList, IonRadioGroup, IonRadio, IonItem, IonContent],
 })
 export class HomePage implements OnInit {
-  mostrarListaCapas = false;
-  mostrarListaCapasOffline = false;
-  mostrarListaCapasOnline = false;
-  mostrarListaTerrenos = false;
+  panel: Panel | null = null;
   // El botón de actualizar capas solo existe en el móvil (en la web las capas van en vivo)
   esNativo = Capacitor.isNativePlatform();
   sinCapasDescargadas = false;
-  mostrarOpcionLeyendas = false;
   mostrarLeyendas = false;
   isModalOpen = false;
   modalContent: string = "";
@@ -56,11 +61,22 @@ export class HomePage implements OnInit {
   leyendasInforme = false;
   emergencia: Emergencia;
   resultadosEmergencia: ResultadosEmergencia | null = null;
-  esModoOscuro = false;
+  esModoOscuro = document.body.classList.contains('dark');
+
+  esEscritorio = isPlatform('desktop');
+  modoInfo = false;
+
+  textoBusqueda = '';
+  resultadosBusqueda: Municipio[] = [];
+  errorBusqueda = '';
+  mostrarResultados = false;
 
  toggleDarkMode() {
     this.esModoOscuro = !this.esModoOscuro;
     document.body.classList.toggle('dark', this.esModoOscuro);
+    try {
+      localStorage.setItem('platea-modo-oscuro', this.esModoOscuro ? '1' : '0');
+    } catch { }
   }
   constructor(public mapa: MapaService,
     private modalCtrl: ModalController,
@@ -69,30 +85,27 @@ export class HomePage implements OnInit {
     public capasOnline: CapasOnline,
     public emergenciaService: EmergenciaService,
     private capasService: CapasService,
-    private capasSqlite: CapasSqliteService) {
+    private capasSqlite: CapasSqliteService,
+    private toastCtrl: ToastController,
+    public medicion: MedicionService,
+    private buscador: BuscadorMunicipiosService,
+    private traficoRutas: TraficoRutas) {
     addIcons({ closeCircleOutline, locationOutline, documentTextOutline, saveOutline, closeOutline, 
               navigateOutline, documentOutline, alertCircleOutline, constructOutline, 
-              cloudUpload, chevronUpOutline, chevronDownOutline, globe, albums, close, download, syncOutline });
+              cloudUpload, chevronUpOutline, chevronDownOutline, globe, albums, close, download, syncOutline,
+              add, remove, scanOutline, informationCircleOutline, layersOutline, ellipsisHorizontal,
+              searchOutline, resizeOutline, squareOutline, settingsOutline, mapOutline });
     this.emergencia = this.emergenciaService.getEmergenciaVacia();
   }
 
   ngOnInit() {
-    this.capasDiputacion.modalClick$.subscribe((html: string) => {
-      this.modalContent = html;
-      this.setOpen(true);
-    });
-    this.capasOffline.modalClick$.subscribe((html: string) => {
-      this.modalContent = html;
-      this.setOpen(true);
-    });
-    this.capasOnline.modalClick$.subscribe((html: string) => {
-      this.modalContent = html;
-      this.setOpen(true);
-    });
-    this.emergenciaService.modalClick$.subscribe((html: string) => {
-      this.modalContent = html;
-      this.setOpen(true);
-    });
+    for (const origen of [this.capasDiputacion, this.capasOffline, this.capasOnline, this.emergenciaService, this.traficoRutas]) {
+      origen.modalClick$.subscribe((html: string) => {
+        if ((this.esEscritorio && !this.modoInfo) || this.medicion.activa || this.modoSeleccionMapa) return;
+        this.modalContent = html;
+        this.setOpen(true);
+      });
+    }
   }
 
   ocultarLoader () {
@@ -111,6 +124,7 @@ export class HomePage implements OnInit {
     await this.capasDiputacion.cargarCapasDiputacion(this.mapa.map!);
     await this.capasOffline.cargarCapasOffline(this.mapa.map!);
     this.capasOnline.cargarCapasOnline(this.mapa.map!);
+    this.actualizarTraficoRutas();
     
     
     this.mapa.map!.once('idle', this.ocultarLoader);  
@@ -144,8 +158,11 @@ export class HomePage implements OnInit {
       this.capasOnline.cargarCapasOnline(this.mapa.map!);
       if (this.mostrarLimpiarEmergencias) 
         this.dibujarEmergenciaEnMapa();
+      this.medicion.redibujar();
+      this.buscador.resaltar(this.mapa.map!);
+      this.actualizarTraficoRutas();
     });
-    this.mostrarListaTerrenos = false;
+    this.panel = null;
   }
 
 
@@ -184,10 +201,109 @@ export class HomePage implements OnInit {
         this.capasOnline.cargarCapaOnline(this.mapa.map!, capa);
       //Una vez cargada la capa se quita el loader
       this.mapa.map!.once('idle', this.ocultarLoader);  
+      this.actualizarTraficoRutas();
       return;
     }
     //Si la capa existe en el mapa, se oculta o se muestra
     this.mapa.onCapasChange(capa, event);
+    this.actualizarTraficoRutas();
+  }
+
+  actualizarTraficoRutas() {
+    if (!this.esEscritorio) return;
+    const capa = this.capasDiputacion.getCapaPorSource('RutasEscolares');
+    if (capa?.checked) {
+      this.traficoRutas.activar(this.mapa.map!, capa);
+    } else if (this.traficoRutas.activo) {
+      this.traficoRutas.desactivar(this.mapa.map!);
+    }
+  }
+
+  togglePanel(panel: Panel) {
+    this.panel = this.panel === panel ? null : panel;
+    if (this.panel === 'buscar') {
+      setTimeout(() => document.querySelector<HTMLInputElement>('.buscador input')?.focus());
+    }
+  }
+
+  cerrarPaneles() {
+    this.panel = null;
+  }
+
+  esPanelCapas(): boolean {
+    return this.panel === 'capas' || this.panel === 'diputacion' || this.panel === 'offline' || this.panel === 'online';
+  }
+
+  esPanelMas(): boolean {
+    return this.panel === 'mas' || this.panel === 'terrenos' || this.panel === 'ajustes';
+  }
+
+  vistaGlobal() {
+    const [o, s, e, n] = EXTENSION_VISTA_GLOBAL;
+    this.mapa.map?.fitBounds([[o, s], [e, n]], { padding: 20 });
+  }
+
+  async toggleModoInfo() {
+    if (this.modoInfo) {
+      this.modoInfo = false;
+      return;
+    }
+    if (!this.hayCapasActivas()) {
+      await this.avisar('Activa alguna capa para poder consultar la información de sus elementos', 'warning');
+      return;
+    }
+    if (this.medicion.tipo) this.medicion.borrar();
+    this.cerrarPaneles();
+    this.modoInfo = true;
+  }
+
+  private hayCapasActivas(): boolean {
+    return [...this.capasDiputacion.capas, ...this.capasOffline.capasOffline, ...this.capasOnline.capasOnline]
+      .some(c => c.checked) || this.mostrarLimpiarEmergencias;
+  }
+
+  iniciarMedicion(tipo: TipoMedicion) {
+    this.modoInfo = false;
+    this.cerrarPaneles();
+    this.medicion.iniciar(this.mapa.map!, tipo);
+  }
+
+  async buscarMunicipio() {
+    const texto = this.textoBusqueda;
+    try {
+      const resultados = await this.buscador.buscar(texto);
+      if (texto !== this.textoBusqueda) return;
+      this.resultadosBusqueda = resultados;
+      this.errorBusqueda = '';
+      this.mostrarResultados = texto.trim().length >= 2;
+    } catch {
+      this.resultadosBusqueda = [];
+      this.errorBusqueda = 'No están disponibles los términos municipales';
+      this.mostrarResultados = true;
+    }
+  }
+
+  irAPrimerResultado() {
+    if (this.resultadosBusqueda.length) this.irAMunicipio(this.resultadosBusqueda[0]);
+  }
+
+  irAMunicipio(municipio: Municipio) {
+    this.cerrarPaneles();
+    this.buscador.irA(this.mapa.map!, municipio);
+    this.textoBusqueda = municipio.nombre;
+    this.mostrarResultados = false;
+  }
+
+  limpiarBusqueda() {
+    this.textoBusqueda = '';
+    this.resultadosBusqueda = [];
+    this.mostrarResultados = false;
+    if (this.mapa.map) this.buscador.limpiar(this.mapa.map);
+  }
+
+  private async avisar(mensaje: string, color: string) {
+    const toast = await this.toastCtrl.create({ message: mensaje, duration: 3000, color, position: 'bottom' });
+    await toast.present();
   }
 
   /**
@@ -263,11 +379,7 @@ export class HomePage implements OnInit {
    * ha descargado/actualizado/eliminado algo, se recargan las capas del mapa.
    */
   async abrirActualizarCapas() {
-    this.mostrarListaCapas = false;
-    this.mostrarListaCapasOffline = false;
-    this.mostrarListaCapasOnline = false;
-    this.mostrarListaTerrenos = false;
-    this.mostrarOpcionLeyendas = false;
+    this.cerrarPaneles();
 
     const modal = await this.modalCtrl.create({
       component: ActualizarCapasComponent,

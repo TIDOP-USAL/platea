@@ -43,98 +43,59 @@ body {
    ========================= */
 
 .dialog-blanco {
-  --background: #fafafa !important;
-  --color: #3c3c3c !important;
-  background-color: #fafafa !important;
-  color: #3c3c3c !important;
+  --background: var(--platea-superficie) !important;
+  --color: var(--platea-texto) !important;
+  background-color: var(--platea-superficie) !important;
+  color: var(--platea-texto) !important;
 }
 
 .dialog-list-blanco {
-  background: #ffffff !important;
-  color: #3c3c3c !important;
+  background: var(--platea-superficie) !important;
+  color: var(--platea-texto) !important;
 }
 
 .dialog-list-blanco ion-item,
 .dialog-list-blanco ion-button,
 .dialog-list-blanco ion-accordion,
 .dialog-list-blanco ion-accordion-group {
-  --background: #ffffff !important;
-  --ion-background-color: #ffffff !important;
-  --color: #3c3c3c !important;
-  --ion-text-color: #3c3c3c !important;
-  background-color: #ffffff !important;
-  color: #3c3c3c !important;
+  --background: var(--platea-superficie) !important;
+  --ion-background-color: var(--platea-superficie) !important;
+  --color: var(--platea-texto) !important;
+  --ion-text-color: var(--platea-texto) !important;
+  background-color: var(--platea-superficie) !important;
+  color: var(--platea-texto) !important;
 }
 
 .header-acordeon {
   cursor: pointer;
-  background-color: #f0f0f0 !important;
-  color: #000000 !important;
+  background-color: var(--platea-azul-suave) !important;
+  color: var(--platea-texto) !important;
   border-radius: 6px;
   margin-bottom: 4px;
 }
 
+:focus-visible {
+  outline: 2px solid var(--platea-azul-logo);
+  outline-offset: 2px;
+}
 
 /* =========================
    MODO OSCURO PERSONALIZADO
    ========================= */
 
 body.dark {
-  --ion-background-color: #121212;
-  --ion-background-color-rgb: 18, 18, 18;
+  --ion-background-color: #2f2f2f;
+  --ion-background-color-rgb: 47, 47, 47;
   --ion-text-color: #ffffff;
   --ion-text-color-rgb: 255, 255, 255;
 
   /* Forzar que las listas, tarjetas y elementos flotantes se vuelvan oscuros */
   ion-list, ion-item, .leyendas > div, .aviso-vacio {
-    --background: #1e1e1e !important;
-    --ion-background-color: #1e1e1e !important;
-    --color: #ffffff !important;
-    --ion-text-color: #ffffff !important;
-    background-color: #1e1e1e !important;
-    color: #ffffff !important;
-  }
-
-  /* Adaptar los botones blancos al modo oscuro */
-  .btn-blanco {
-    --background: #2a2a2a;
-    --color: #ffffff;
-    --background-hover: #3a3a3a;
-    --background-activated: #4a4a4a;
-  }
-  
-  #lista-capas, #lista-leyendas, #lista-terrenos {
-    background-color: #ffffff;
-    color: #3c3c3c;
-  }
-
-  /* Modal y diálogos en modo oscuro */
-  .dialog-blanco {
-    --background: #1e1e1e !important;
-    --color: #ffffff !important;
-    background-color: #1e1e1e !important;
-    color: #ffffff !important;
-  }
-
-  .dialog-list-blanco {
-    background: #1e1e1e !important;
-    color: #ffffff !important;
-  }
-
-  .dialog-list-blanco ion-item,
-  .dialog-list-blanco ion-button,
-  .dialog-list-blanco ion-accordion,
-  .dialog-list-blanco ion-accordion-group {
-    --background: #1e1e1e !important;
-    --ion-background-color: #1e1e1e !important;
-    --color: #ffffff !important;
-    --ion-text-color: #ffffff !important;
-    background-color: #1e1e1e !important;
-    color: #ffffff !important;
-  }
-
-  .header-acordeon {
-    background-color: #2a2a2a !important;
-    color: #ffffff !important;
+    --background: var(--platea-superficie) !important;
+    --ion-background-color: var(--platea-superficie) !important;
+    --color: var(--platea-texto) !important;
+    --ion-text-color: var(--platea-texto) !important;
+    background-color: var(--platea-superficie) !important;
+    color: var(--platea-texto) !important;
   }
 }
