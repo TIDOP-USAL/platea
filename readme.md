@@ -98,6 +98,7 @@ Extrae el zip:
   data.json        → src/assets/data/data.json
   uploads/*.geojson → src/assets/data/uploads/
     ↓
+#Dentro de la carpeta frontend
 ionic build && npx cap sync android
     ↓
 npx cap open android

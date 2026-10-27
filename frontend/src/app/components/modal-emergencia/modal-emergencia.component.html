@@ -179,14 +179,19 @@
         <ion-label><strong>Parques de extinción ({{emergenciaService.resultados?.parques?.length || 0}} en {{emergenciaService.emergencia.distanciaMedios}} km)</strong></ion-label>
       </ion-list-header>
       @for (p of emergenciaService.resultados?.parques; track p.fid) {
-      <ion-item>
+      
+          <ion-item  [color]="esParqueMasCercano(p) ? 'light' : undefined">
+      
         <ion-label>
           <h3>{{p.name}}</h3>
           <p>{{p.type}}</p>
+          @if (esParqueMasCercano(p)) {
+            <p><strong><ion-icon name="flag-outline" style="margin-right:8px; color:#e63946;"></ion-icon>Ruta mas cercana</strong></p>
+          }
         </ion-label>
         <ion-note slot="end">{{p.distancia}} km en linea recta</ion-note>
         <ion-note slot="end">{{p.distanciaRuta}} km en carretera</ion-note>
-      </ion-item>
+        </ion-item>      
       }
       @if (!emergenciaService.resultados?.parques?.length) {
         <ion-item><ion-label color="medium">Sin parques en el radio indicado</ion-label></ion-item>
@@ -227,9 +232,10 @@
           <p>Tipo/Conector: {{h.hydrant_type || '—'}} / {{h.connector_type || '—'}}</p>
         </ion-label>
         <ion-note slot="end">{{h.distancia}} km en linea recta</ion-note>
-        <ion-note slot="end">{{h.distanciaRuta}} km en carretera</ion-note>
+        <ion-note slot="end">{{h.distanciaRuta}} km en carretera</ion-note>        
       </ion-item>
       }
+
       @if (!emergenciaService.resultados?.hidrantes?.length) {
         <ion-item><ion-label color="medium">Sin hidrantes en el radio indicado</ion-label></ion-item>
       }

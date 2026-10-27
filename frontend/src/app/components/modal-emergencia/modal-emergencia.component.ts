@@ -6,7 +6,8 @@ import {mapOutline,
   locationOutline, documentTextOutline, saveOutline,
   chevronUpOutline, chevronDownOutline, closeOutline,
   alertCircleOutline, navigateOutline, documentOutline,
-  arrowBackOutline, businessOutline, flameOutline, peopleOutline, waterOutline
+  arrowBackOutline, businessOutline, flameOutline, peopleOutline, waterOutline,
+  flagOutline
 } from 'ionicons/icons';
 import { IonNote,
   IonHeader, IonToolbar, IonTitle, IonContent, IonButtons,
@@ -68,7 +69,7 @@ export class ModalEmergenciaComponent  implements OnInit {
     'flame-outline': flameOutline,
     'people-outline': peopleOutline,
     'water-outline': waterOutline,
-
+    'flag-outline': flagOutline,
     });
   }
 
@@ -113,5 +114,9 @@ export class ModalEmergenciaComponent  implements OnInit {
 
   volver() {
     this.vista = 'formulario';
+  }
+
+  esParqueMasCercano(p: any): boolean {
+    return p.fid === this.emergenciaService.resultados?.rutaParqueCercano?.parque?.fid;
   }
 }

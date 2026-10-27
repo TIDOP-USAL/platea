@@ -21,11 +21,18 @@ export interface Emergencia {
   nombreInforme: string;
   abrirAlTerminar: boolean;
 }
+export interface RutaParque {
+  parque: any;
+  geometry: any; // LineString GeoJSON
+  distanciaKm: number;
+  duracionMin: number;
+}
 export interface ResultadosEmergencia {
   municipio: { nombre: string; codmuni: string; comarca: string; poblacion: number } | null;
   parques: any[];
   inventario: any[];
   hidrantes: any[];
+  rutaParqueCercano: RutaParque | null;
 }
 @Injectable({
   providedIn: 'root'
@@ -181,6 +188,28 @@ export class EmergenciaService {
     }
   }
   /**
+   * Calcula la geometría completa de la ruta en km entre dos puntos usando la API de OSRM
+   * @param lat1 Latitud del primer punto
+   * @param lon1 Longitud del primer punto
+   * @param lat2 Latitud del segundo punto
+   * @param lon2 Longitud del segundo punto
+   * @returns Objeto con la geometría (LineString GeoJSON), distancia en km y duración en minutos
+   */
+  async calcularRutaCompleta(lat1: number, lon1: number, lat2: number, lon2: number):
+  Promise<{ geometry: any; distanciaKm: number; duracionMin: number } | null> {
+  try {
+    const url = `https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=full&geometries=geojson`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.code !== 'Ok') return null;
+    const r = data.routes[0];
+    return { geometry: r.geometry, distanciaKm: r.distance / 1000, duracionMin: r.duration / 60 };
+  } catch (e) {
+    console.error('Error calculando geometría de ruta', e);
+    return null;
+  }
+}
+  /**
    * Comprueba si un punto esta dentro de un polígono usando el algoritmo ray casting
    * se usa para saber que recursos caen dentro del radio de la emergencia
    * @param lat Latitud del punto
@@ -265,6 +294,15 @@ export class EmergenciaService {
       })
     );
     parques.sort((a: any, b: any) => a.distancia - b.distancia);
+    
+    //calculo la ruta al parque mas cercano
+    const dist = (p: any) => p.distanciaRuta !== null ? Number(p.distanciaRuta) : Number(p.distancia);
+    let rutaParqueCercano: RutaParque | null = null;
+    if (parques.length) {
+      const masCercano = parques.reduce((a: any, b: any) => dist(b) < dist(a) ? b : a);
+      const ruta = await this.calcularRutaCompleta(masCercano.lat, masCercano.lon, lat, lon);
+      if (ruta) rutaParqueCercano = { parque: masCercano, ...ruta };
+    }
 
     // Inventario medios/recursos dentro del radio
     const inventario =  await Promise.all(geoInventario.features
@@ -305,7 +343,7 @@ export class EmergenciaService {
       }));
       hidrantes.sort((a: any, b: any) => a.distancia - b.distancia);
 
-    this.resultados = { municipio, parques, inventario, hidrantes };
+    this.resultados = { municipio, parques, inventario, hidrantes, rutaParqueCercano };
     return this.resultados;
   }
 
@@ -409,6 +447,23 @@ export class EmergenciaService {
         'circle-stroke-color': '#ffffff'
       }
     });
+    const ruta = resultados!.rutaParqueCercano;
+    if (ruta) {
+      map.addSource('emergencia-ruta', {
+        type: 'geojson',
+        data: { type: 'Feature', geometry: ruta.geometry, properties: {} }
+      });
+      map.addLayer({
+        id: 'emergencia-ruta-casing', type: 'line', source: 'emergencia-ruta',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': '#ffffff', 'line-width': 8 }
+      });
+      map.addLayer({
+        id: 'emergencia-ruta-layer', type: 'line', source: 'emergencia-ruta',
+        layout: { 'line-cap': 'round', 'line-join': 'round' },
+        paint: { 'line-color': '#ff6b35', 'line-width': 5 }
+      });
+    }
 
     // ── 5. Inventario recursos humanos ──
     map.addSource('emergencia-inventario', {
@@ -693,6 +748,7 @@ export class EmergenciaService {
       'emergencia-parques-layer',
       'emergencia-inventario-layer',
       'emergencia-hidrantes-layer',
+      'emergencia-ruta-casing', 'emergencia-ruta-layer'
     ];
 
     // Centra el mapa
@@ -749,7 +805,8 @@ export class EmergenciaService {
       'emergencia-radio-hidrantes',
       'emergencia-parques',
       'emergencia-inventario',
-      'emergencia-hidrantes'
+      'emergencia-hidrantes',
+      'emergencia-ruta'
     ];
 
     this.capasEmergenciaActiva.forEach(id => {
