@@ -142,10 +142,11 @@ ion-modal.modal-info.modal-redondo {
 ion-modal.modal-emergencia {
   --width: 90%;
   --max-width: 520px;
-  --height: 80vh;
+  --height: 75vh;
   --max-height: 680px;
   --border-radius: 20px;
   --box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+  padding-top: calc(56px + env(safe-area-inset-top));
   margin: auto;
 }
 
