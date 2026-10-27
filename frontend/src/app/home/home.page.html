@@ -13,12 +13,14 @@
   <div class="barra-herramientas">
 
     <div class="botones">
+      @if (esEscritorio) {
       <button type="button" class="btn-herramienta" (click)="mapa.map?.zoomIn()" title="Acercar" aria-label="Acercar">
         <ion-icon name="add"></ion-icon>
       </button>
       <button type="button" class="btn-herramienta" (click)="mapa.map?.zoomOut()" title="Alejar" aria-label="Alejar">
         <ion-icon name="remove"></ion-icon>
       </button>
+      }
       <button type="button" class="btn-herramienta" (click)="vistaGlobal()" title="Vista global" aria-label="Vista global">
         <ion-icon name="scan-outline"></ion-icon>
       </button>
@@ -34,7 +36,7 @@
       </button>
       <button type="button" class="btn-herramienta" (click)="cerrarPaneles(); abrirModalEmergencia()"
         title="Emergencia" aria-label="Emergencia">
-        <ion-icon name="alert-circle-outline"></ion-icon>
+        <ion-icon name="flame-outline"></ion-icon>
       </button>
       <button type="button" class="btn-herramienta" [class.activo]="panel === 'buscar'" (click)="togglePanel('buscar')"
         title="Buscar municipio" aria-label="Buscar municipio" [attr.aria-expanded]="panel === 'buscar'">

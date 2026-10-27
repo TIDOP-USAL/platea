@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { IonListHeader, IonModal, IonIcon, IonLabel, IonCheckbox, IonHeader, IonToolbar, IonList, IonRadioGroup, IonRadio, IonItem, IonContent } from '@ionic/angular/standalone';
 
 import { add, remove, scanOutline, informationCircleOutline, layersOutline, ellipsisHorizontal,
-   searchOutline, resizeOutline, squareOutline, settingsOutline, mapOutline } from 'ionicons/icons';
+   searchOutline, resizeOutline, squareOutline, settingsOutline, mapOutline, flameOutline } from 'ionicons/icons';
 import { closeCircleOutline, locationOutline, documentTextOutline, saveOutline,
    closeOutline, navigateOutline, documentOutline, alertCircleOutline, 
    cloudUpload, chevronUpOutline, chevronDownOutline, 
@@ -94,7 +94,7 @@ export class HomePage implements OnInit {
               navigateOutline, documentOutline, alertCircleOutline, constructOutline, 
               cloudUpload, chevronUpOutline, chevronDownOutline, globe, albums, close, download, syncOutline,
               add, remove, scanOutline, informationCircleOutline, layersOutline, ellipsisHorizontal,
-              searchOutline, resizeOutline, squareOutline, settingsOutline, mapOutline });
+              searchOutline, resizeOutline, squareOutline, settingsOutline, mapOutline, flameOutline });
     this.emergencia = this.emergenciaService.getEmergenciaVacia();
   }
 
@@ -316,7 +316,8 @@ export class HomePage implements OnInit {
       this.emergenciaService.emergencia.coordNorte = coords.coordNorte;
     }
     const modal = await this.modalCtrl.create({
-      component: ModalEmergenciaComponent
+      component: ModalEmergenciaComponent,
+      cssClass: 'modal-emergencia'
     });
     await modal.present();
 

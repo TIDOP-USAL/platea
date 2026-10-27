@@ -14,6 +14,76 @@
   --color: #3c3c3c;
 }
 
+.boton-ancho {
+  width: 100%;
+  margin: 8px 0;
+}
+
+.acciones-emergencia {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+  padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+
+  ion-button {
+    flex: 1 1 160px;
+    margin: 0;
+  }
+}
+
+.aviso-campos {
+  background-color: #fff3cd;
+  border: 1px solid #ffeeba;
+  padding: 12px;
+  border-radius: 6px;
+  margin-top: 8px;
+  color: #856404;
+
+  p {
+    font-size: 13px;
+    margin: 4px 0 0 0;
+  }
+}
+
+.valor {
+  max-width: 60%;
+  white-space: normal;
+  text-align: right;
+  font-size: 14px;
+  color: var(--platea-texto-suave);
+}
+
+.distancias {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  max-width: 40%;
+  font-size: 13px;
+  text-align: right;
+  color: var(--platea-texto-suave);
+}
+
+ion-label p {
+  color: var(--platea-texto-suave) !important;
+}
+
+@media (max-width: 576px) {
+  ion-title {
+    font-size: 17px;
+  }
+
+  .acciones-emergencia {
+    flex-direction: column;
+
+    ion-button {
+      flex: none;
+      width: 100%;
+    }
+  }
+}
+
 
 /* =========================
    MODO OSCURO

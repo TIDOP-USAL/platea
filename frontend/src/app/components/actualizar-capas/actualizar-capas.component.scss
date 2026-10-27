@@ -12,9 +12,52 @@
 
 .icono-grande { font-size: 56px; }
 
-.fase { margin: 0; color: var(--ion-color-medium); }
+.fase { margin: 0; color: var(--platea-texto-suave); }
 
-.nota { display: block; margin: 12px 4px; }
+.nota { display: block; margin: 12px 4px; color: var(--platea-texto-suave); }
+
+ion-toolbar {
+  --background: var(--platea-cabecera);
+  --color: var(--platea-texto);
+}
+
+ion-content {
+  --background: var(--platea-superficie-2);
+  --color: var(--platea-texto);
+}
+
+ion-list {
+  background: var(--platea-superficie);
+  border: 1px solid var(--platea-borde);
+  border-radius: 10px;
+  margin-bottom: 12px;
+  padding: 0;
+  overflow: hidden;
+}
+
+ion-list-header {
+  --background: var(--platea-azul-suave);
+  --color: var(--platea-texto);
+  background: var(--platea-azul-suave);
+  color: var(--platea-texto);
+}
+
+ion-item {
+  --background: var(--platea-superficie);
+  --color: var(--platea-texto);
+  --border-color: var(--platea-borde);
+}
+
+ion-note,
+ion-label p { color: var(--platea-texto-suave) !important; }
+
+.seleccionar-todas {
+  --background: var(--platea-superficie);
+  margin: 20px 0 16px;
+  border: 1.5px solid var(--platea-azul);
+  border-radius: 10px;
+  font-weight: 600;
+}
 
 .acciones {
   display: flex;

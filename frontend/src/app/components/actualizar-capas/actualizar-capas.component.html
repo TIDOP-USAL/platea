@@ -57,7 +57,7 @@
         }
 
         @if (totalOpcionales) {
-          <ion-item lines="none">
+          <ion-item lines="none" class="seleccionar-todas">
             <ion-checkbox [checked]="todasMarcadas" (ionChange)="alternarTodas($event.detail.checked)">
               Seleccionar todas
             </ion-checkbox>
@@ -70,7 +70,7 @@
                   <ion-checkbox
                     [checked]="seleccionadas.has(item.capa.id)"
                     (ionChange)="alternar(item, $event.detail.checked)">
-                    <ion-label>
+                    <ion-label class="ion-text-wrap">
                       {{ item.capa.texto }}
                       <p>
                         @if (item.estado === 'nueva') { {{ formatoTamano(item.capa.tamano_bytes) }} }

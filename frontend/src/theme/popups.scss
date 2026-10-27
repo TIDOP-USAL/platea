@@ -139,6 +139,16 @@ ion-modal.modal-info.modal-redondo {
   margin: auto;
 }
 
+ion-modal.modal-emergencia {
+  --width: 90%;
+  --max-width: 520px;
+  --height: 80vh;
+  --max-height: 680px;
+  --border-radius: 20px;
+  --box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+  margin: auto;
+}
+
 
 /* =========================
    ADAPTACIÓN CUANDO EL BODY TIENE LA CLASE .DARK (MODO OSCURO)
