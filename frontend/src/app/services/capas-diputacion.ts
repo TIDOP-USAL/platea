@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { Subject } from 'rxjs';
 import { CapasService } from './capas.service';
 import { urlFotoHidrante } from './foto-hidrante';
+import { urlMapas, textoMapas } from './enlace-mapas';
 import { Grupo, Capa } from '../models/capas.model';
 
 @Injectable({
@@ -752,7 +753,7 @@ export class CapasDiputacion implements OnInit {
   const long = propiedades.long ?? 'N/D';
   const origen = propiedades.source ?? 'N/D';
   const fecha = propiedades.date ?? 'N/D';
-  const urlMaps = propiedades.url_google_maps;
+  const urlMaps = propiedades.url_google_maps && urlMapas(propiedades.lat, propiedades.long, propiedades.url_google_maps);
 
   // Mapeo Tipo de Conector
   const mapaTipoConector: Record<string | number, string> = {
@@ -818,7 +819,7 @@ export class CapasDiputacion implements OnInit {
       </div>
       ${urlMaps ? `
         <a href="${urlMaps}" target="_blank" rel="noopener noreferrer" class="popup-btn">
-          <span>Ver en Google Maps</span> ↗
+          <span>${textoMapas}</span> ↗
         </a>
       ` : ''}
     </div>
@@ -834,7 +835,7 @@ export class CapasDiputacion implements OnInit {
     const esAgricola = propiedades?.['is_farming'] == 1 ? 'Sí' : 'No';
 
     const [lng, lat] = geometry?.coordinates ?? [0, 0];
-    const urlMaps = `https://www.google.com/maps/place/${lat},${lng}`;
+    const urlMaps = urlMapas(lat, lng);
 
     return `
       <div class="popup-card">
@@ -851,7 +852,7 @@ export class CapasDiputacion implements OnInit {
         </div>
 
         <a href="${urlMaps}" target="_blank" rel="noopener" class="popup-btn">
-          <span>Ver en Google Maps</span> ↗
+          <span>${textoMapas}</span> ↗
         </a>
       </div>
     `;
@@ -864,7 +865,7 @@ export class CapasDiputacion implements OnInit {
     const horario = propiedades?.['horario'] ?? 'N/D';
 
     const [lng, lat] = geometry?.coordinates ?? [0, 0];
-    const urlMaps = `https://www.google.com/maps/place/${lat},${lng}`;
+    const urlMaps = urlMapas(lat, lng);
 
     return `
       <div class="popup-card">
@@ -879,7 +880,7 @@ export class CapasDiputacion implements OnInit {
         </div>
 
         <a href="${urlMaps}" target="_blank" rel="noopener" class="popup-btn">
-          <span>Ver en Google Maps</span> ↗
+          <span>${textoMapas}</span> ↗
         </a>
       </div>
     `;
@@ -891,7 +892,7 @@ export class CapasDiputacion implements OnInit {
     const provincia = propiedades?.['provincia'] ?? 'N/D';
 
     const [lng, lat] = geometry?.coordinates ?? [0, 0];
-    const urlMaps = `https://www.google.com/maps/place/${lat},${lng}`;
+    const urlMaps = urlMapas(lat, lng);
 
     return `
       <div class="popup-card">
@@ -905,7 +906,7 @@ export class CapasDiputacion implements OnInit {
         </div>
 
         <a href="${urlMaps}" target="_blank" rel="noopener" class="popup-btn">
-          <span>Ver en Google Maps</span> ↗
+          <span>${textoMapas}</span> ↗
         </a>
       </div>
     `;
@@ -925,7 +926,7 @@ export class CapasDiputacion implements OnInit {
     const nombre = propiedades?.['a_nombre'] ?? 'Centro Sanitario';
     const tipo = propiedades?.['d_tipocent'] ?? 'N/D';
     const [lng, lat] = geometry?.coordinates ?? [0, 0];
-    const urlMaps = `https://www.google.com/maps/place/${lat},${lng}`;
+    const urlMaps = urlMapas(lat, lng);
 
     return `
       <div class="popup-card">
@@ -939,7 +940,7 @@ export class CapasDiputacion implements OnInit {
         </div>
 
         <a href="${urlMaps}" target="_blank" rel="noopener" class="popup-btn">
-          <span>Ver en Google Maps</span> ↗
+          <span>${textoMapas}</span> ↗
         </a>
       </div>
     `;

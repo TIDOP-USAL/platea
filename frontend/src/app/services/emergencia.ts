@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
 import { CapasService } from './capas.service';
 import { urlFotoHidrante } from './foto-hidrante';
+import { urlMapas, textoMapas } from './enlace-mapas';
 
 // nombre_source de las capas de Diputación que usa la generación de emergencias
 const SOURCE_PARQUES = 'ParquesExtincionSalvamento';
@@ -659,7 +660,7 @@ export class EmergenciaService {
       const long = p.lon ?? p.long ?? 'N/D'; // Compatible con lon o long
       const origen = p.source ?? 'N/D';
       const fecha = p.date ?? 'N/D';
-      const urlMaps = p.url_google_maps;
+      const urlMaps = p.url_google_maps && urlMapas(p.lat, p.lon ?? p.long, p.url_google_maps);
 
       // Mapeo Tipo de Conector
       const mapaTipoConector: Record<string | number, string> = {
@@ -734,7 +735,7 @@ export class EmergenciaService {
           </div>
           ${urlMaps ? `
             <a href="${urlMaps}" target="_blank" rel="noopener noreferrer" class="popup-btn">
-              <span>Ver en Google Maps</span> ↗
+              <span>${textoMapas}</span> ↗
             </a>
           ` : ''}
         </div>

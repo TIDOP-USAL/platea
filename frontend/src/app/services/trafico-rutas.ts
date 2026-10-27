@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Subject } from 'rxjs';
 import * as turf from '@turf/turf';
 import { environment } from '../environments/environment';
+import { urlTraficoMapas, nombreMapas } from './enlace-mapas';
 
 const SOURCE_INCIDENCIAS = 'IncidenciasRutas';
 const DISTANCIA_RUTA_KM = 1;
@@ -97,7 +98,7 @@ export class TraficoRutas {
     const municipio = propiedades?.['municipio'] ?? 'N/D';
     const inicio = propiedades?.['inicio'] ? new Date(propiedades['inicio']).toLocaleString('es-ES') : 'N/D';
     const [lng, lat] = geometry?.coordinates ?? [0, 0];
-    const urlMaps = `https://www.google.com/maps/@${lat},${lng},15z/data=!5m1!1e1`;
+    const urlMaps = urlTraficoMapas(lat, lng);
 
     return `
       <div class="popup-card">
@@ -127,7 +128,7 @@ export class TraficoRutas {
         </div>
 
         <a href="${urlMaps}" target="_blank" rel="noopener" class="popup-btn">
-          <span>Ver tráfico en Google Maps</span> ↗
+          <span>Ver tráfico en ${nombreMapas}</span> ↗
         </a>
       </div>
     `;
