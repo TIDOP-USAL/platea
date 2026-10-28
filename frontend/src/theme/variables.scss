@@ -2,6 +2,8 @@
 // https://ionicframework.com/docs/theming/
 
 :root {
+  color-scheme: light;
+
   --platea-azul: #0a6cc2;
   --platea-azul-logo: #1e8fe8;
   --platea-azul-suave: #e3f0fb;
@@ -32,6 +34,8 @@
 }
 
 body.dark {
+  color-scheme: dark;
+
   --platea-azul: #5ab0f5;
   --platea-azul-logo: #5ab0f5;
   --platea-azul-suave: #34495c;
